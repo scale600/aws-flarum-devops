@@ -89,11 +89,11 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-        # Create docker context directory
-        mkdir -p docker/riderhub
-        
-        # Copy Flarum application to docker context
-        cp -r src/riderhub/* docker/riderhub/
+          # Create docker context directory
+          mkdir -p docker/riderhub
+          
+          # Copy Flarum application to docker context
+          cp -r src/riderhub/* docker/riderhub/
 
           # Build a docker container and push it to ECR
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./docker/riderhub
