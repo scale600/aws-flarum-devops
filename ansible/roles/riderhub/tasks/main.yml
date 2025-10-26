@@ -1,15 +1,15 @@
 ---
 - name: Install Composer dependencies
   shell: |
-    cd {{ project_name }}
+    cd src/{{ project_name }}
     composer install --no-dev --optimize-autoloader --no-interaction
   args:
-    creates: "{{ project_name }}/vendor/autoload.php"
+    creates: "src/{{ project_name }}/vendor/autoload.php"
   
 - name: Configure Flarum for DynamoDB
   template:
     src: config.php.j2
-    dest: "{{ project_name }}/config.php"
+    dest: "src/{{ project_name }}/config.php"
     mode: '0644'
   vars:
     dynamodb_posts_table: "{{ dynamodb_posts_table | default('riderhub-posts') }}"
@@ -22,16 +22,16 @@
     
 - name: Set up DynamoDB adapter
   shell: |
-    cd {{ project_name }}
+    cd src/{{ project_name }}
     composer require aws/aws-sdk-php
     composer require bref/bref
   args:
-    creates: "{{ project_name }}/vendor/aws/aws-sdk-php"
+    creates: "src/{{ project_name }}/vendor/aws/aws-sdk-php"
     
 - name: Create Lambda handler
   template:
     src: lambda.php.j2
-    dest: "{{ project_name }}/lambda.php"
+    dest: "src/{{ project_name }}/lambda.php"
     mode: '0644'
   vars:
     dynamodb_posts_table: "{{ dynamodb_posts_table | default('riderhub-posts') }}"
@@ -44,7 +44,7 @@
     
 - name: Optimize for production
   shell: |
-    cd {{ project_name }}
+    cd src/{{ project_name }}
     php flarum cache:clear || true
     php flarum assets:publish || true
   ignore_errors: true
