@@ -89,7 +89,7 @@ resource "aws_lambda_function" "riderhub" {
   function_name = "${var.project_name}-api"
   role         = aws_iam_role.lambda_role.arn
   package_type = "Image"
-  image_uri    = "${aws_ecr_repository.riderhub.repository_url}:latest"
+  image_uri    = "${aws_ecr_repository.riderhub.repository_url}:${var.image_tag}"
   
   timeout     = 30
   memory_size = 512
