@@ -45,3 +45,9 @@ variable "aws_account_id" {
   type        = string
   default     = "753523452116"
 }
+
+variable "image_tag" {
+  description = "Docker image tag for Lambda function"
+  type        = string
+  default     = "latest"
+}

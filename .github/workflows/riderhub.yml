@@ -91,7 +91,7 @@ jobs:
         run: |
           # Create docker context directory
           mkdir -p docker/riderhub
-          
+
           # Copy Flarum application to docker context
           cp -r src/riderhub/* docker/riderhub/
 
@@ -103,7 +103,7 @@ jobs:
       - name: Create Lambda Function and API Gateway Integration
         run: |
           cd terraform
-          terraform apply -auto-approve -target=aws_lambda_function.riderhub -target=aws_api_gateway_integration.posts -target=aws_lambda_permission.api_gateway -target=aws_api_gateway_deployment.riderhub -target=aws_api_gateway_stage.riderhub
+          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_lambda_function.riderhub -target=aws_api_gateway_integration.posts -target=aws_lambda_permission.api_gateway -target=aws_api_gateway_deployment.riderhub -target=aws_api_gateway_stage.riderhub
 
       - name: Deploy to Amplify
         run: |
