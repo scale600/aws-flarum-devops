@@ -60,9 +60,11 @@ aws-flarum-devops/
 ## Getting Started
 
 1. **Clone Repository**: `git clone https://github.com/scale600/aws-flarum-devops-serverless`
-2. **Set Up AWS Credentials**: Configure AWS CLI with Free Tier account (access key, secret key).
+2. **Set Up AWS Environment**: Follow the [AWS Setup Guide](docs/AWS_SETUP_GUIDE.md) for complete environment configuration
+3. **Configure GitHub Secrets**: Follow the [GitHub Secrets Setup Guide](docs/GITHUB_SECRETS_SETUP.md) for CI/CD pipeline configuration
 
 ### Terraform Deployment:
+
 ```bash
 # Navigate to terraform/
 cd terraform
@@ -73,12 +75,14 @@ terraform apply -auto-approve
 ```
 
 ### Ansible Configuration:
+
 ```bash
 # Run playbook
 ansible-playbook ansible/riderhub.yml
 ```
 
 ### Docker Build:
+
 ```bash
 # Build Flarum image
 docker build -t riderhub ./docker/riderhub
@@ -87,13 +91,16 @@ docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/riderhub:latest
 ```
 
 ### GitHub Actions CI/CD:
+
 1. Configure secrets (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AMPLIFY_APP_ID) in GitHub.
 2. Push changes to trigger riderhub.yml workflow for Lambda/Amplify deployment.
 
 ### Blogspot Integration:
+
 Add forum link to RiderWin.com Blogspot (e.g., `<a href="https://riderhub.amplifyapp.com">Join Forum</a>`).
 
 ### Test:
+
 Verify forum functionality (posts, comments, media uploads, notifications) and AWS Free Tier limits.
 
 ## Prerequisites
