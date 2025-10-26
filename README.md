@@ -60,8 +60,8 @@ aws-flarum-devops/
 ## Getting Started
 
 1. **Clone Repository**: `git clone https://github.com/scale600/aws-flarum-devops-serverless`
-2. **Set Up AWS Environment**: Follow the [AWS Setup Guide](docs/AWS_SETUP_GUIDE.md) for complete environment configuration
-3. **Configure GitHub Secrets**: Follow the [GitHub Secrets Setup Guide](docs/GITHUB_SECRETS_SETUP.md) for CI/CD pipeline configuration
+2. **Set Up AWS Environment**: Follow the [AWS Setup Guide](.github/docs/AWS_SETUP_GUIDE.md) for complete environment configuration
+3. **Configure GitHub Secrets**: Follow the [GitHub Secrets Setup Guide](.github/docs/GITHUB_SECRETS_SETUP.md) for CI/CD pipeline configuration
 
 ### Terraform Deployment:
 
