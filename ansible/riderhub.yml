@@ -1,0 +1,49 @@
+---
+- name: Configure RiderHub Flarum Application
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  
+  vars:
+    project_name: "riderhub"
+    php_version: "8.1"
+    composer_home: "/tmp/composer"
+    
+  tasks:
+    - name: Install Composer dependencies
+      shell: |
+        cd {{ project_name }}
+        composer install --no-dev --optimize-autoloader
+      args:
+        creates: "{{ project_name }}/vendor/autoload.php"
+      
+    - name: Configure Flarum for DynamoDB
+      template:
+        src: config.php.j2
+        dest: "{{ project_name }}/config.php"
+        mode: '0644'
+      vars:
+        dynamodb_posts_table: "{{ dynamodb_posts_table | default('riderhub-posts') }}"
+        dynamodb_comments_table: "{{ dynamodb_comments_table | default('riderhub-comments') }}"
+        s3_media_bucket: "{{ s3_media_bucket | default('riderhub-media') }}"
+        
+    - name: Set up DynamoDB adapter
+      shell: |
+        cd {{ project_name }}
+        composer require aws/aws-sdk-php
+        composer require bref/bref
+      args:
+        creates: "{{ project_name }}/vendor/aws/aws-sdk-php"
+        
+    - name: Create Lambda handler
+      template:
+        src: lambda.php.j2
+        dest: "{{ project_name }}/lambda.php"
+        mode: '0644'
+        
+    - name: Optimize for production
+      shell: |
+        cd {{ project_name }}
+        php flarum cache:clear
+        php flarum assets:publish
+      ignore_errors: true
