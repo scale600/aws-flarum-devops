@@ -58,6 +58,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Setup Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+          ansible --version
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Run Terraform Apply (Infrastructure First)
         run: |
           cd terraform
@@ -75,8 +89,14 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
+          # Create docker context directory
+          mkdir -p docker/riderhub
+          
           # Copy Flarum application to docker context
           cp -r src/riderhub/* docker/riderhub/
+          
+          # Copy Dockerfile to correct location
+          cp docker/riderhub/Dockerfile docker/riderhub/
 
           # Build a docker container and push it to ECR
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./docker/riderhub
@@ -91,10 +111,16 @@ jobs:
 
       - name: Deploy to Amplify
         run: |
-          # Build React frontend
-          cd src/riderhub
-          npm install
-          npm run build
+          # Install Node.js for frontend build
+          curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          
+          # Build React frontend (if frontend exists)
+          if [ -d "src/riderhub/public" ]; then
+            cd src/riderhub
+            npm install
+            npm run build
+          fi
 
           # Deploy to Amplify (assuming Amplify app is already configured)
           aws amplify start-deployment \
@@ -108,7 +134,20 @@ jobs:
 
       - name: Run Ansible Configuration
         run: |
+          # Get Terraform outputs for dynamic configuration
+          cd terraform
+          POSTS_TABLE=$(terraform output -raw dynamodb_posts_table 2>/dev/null || echo "riderhub-posts")
+          COMMENTS_TABLE=$(terraform output -raw dynamodb_comments_table 2>/dev/null || echo "riderhub-comments")
+          S3_BUCKET=$(terraform output -raw s3_bucket_name 2>/dev/null || echo "riderhub-media")
+          
+          cd ..
+          
+          # Run Ansible playbook with dynamic variables
           ansible-playbook ansible/riderhub.yml \
-            -e dynamodb_posts_table=riderhub-posts \
-            -e dynamodb_comments_table=riderhub-comments \
-            -e s3_media_bucket=riderhub-media
+            -e dynamodb_posts_table=$POSTS_TABLE \
+            -e dynamodb_comments_table=$COMMENTS_TABLE \
+            -e s3_media_bucket=$S3_BUCKET \
+            -e aws_region=${{ env.AWS_REGION }} \
+            -e app_url=https://riderhub.amplifyapp.com \
+            -e app_env=production \
+            -e app_debug=false
