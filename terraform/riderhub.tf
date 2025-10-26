@@ -255,3 +255,18 @@ output "s3_bucket_name" {
   description = "S3 Media Bucket Name"
   value       = aws_s3_bucket.media.bucket
 }
+
+output "dynamodb_posts_table" {
+  description = "DynamoDB Posts Table Name"
+  value       = aws_dynamodb_table.posts.name
+}
+
+output "dynamodb_comments_table" {
+  description = "DynamoDB Comments Table Name"
+  value       = aws_dynamodb_table.comments.name
+}
+
+output "lambda_function_name" {
+  description = "Lambda Function Name"
+  value       = aws_lambda_function.riderhub.function_name
+}

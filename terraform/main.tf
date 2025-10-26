@@ -45,3 +45,9 @@ variable "aws_account_id" {
   type        = string
   default     = "753523452116"
 }
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "production"
+}
