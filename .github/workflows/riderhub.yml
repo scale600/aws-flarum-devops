@@ -8,6 +8,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 753523452116
   ECR_REPOSITORY: riderhub
   ECS_SERVICE: riderhub-api
   ECS_CLUSTER: riderhub-cluster
