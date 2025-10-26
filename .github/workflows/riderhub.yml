@@ -32,15 +32,18 @@ jobs:
       - name: Install Composer dependencies
         run: |
           cd src/riderhub
-          composer install --prefer-dist --no-progress
+          composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run PHP tests
         run: |
           cd src/riderhub
           vendor/bin/phpunit --configuration phpunit.xml
+        env:
+          APP_ENV: testing
+          APP_DEBUG: true
 
   build-and-deploy:
-    # needs: test  # 테스트 단계 건너뛰기 (Flarum 앱이 아직 구현되지 않음)
+    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
@@ -65,6 +68,9 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
+          # Copy Flarum application to docker context
+          cp -r src/riderhub/* docker/riderhub/
+          
           # Build a docker container and push it to ECR
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./docker/riderhub
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
