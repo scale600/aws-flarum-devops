@@ -31,7 +31,7 @@ variable "aws_region" {
 variable "environment" {
   description = "Environment name"
   type        = string
-  default     = "dev"
+  default     = "production"
 }
 
 variable "project_name" {
@@ -44,10 +44,4 @@ variable "aws_account_id" {
   description = "AWS Account ID"
   type        = string
   default     = "753523452116"
-}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "production"
 }

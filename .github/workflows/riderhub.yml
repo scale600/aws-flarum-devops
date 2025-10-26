@@ -91,10 +91,10 @@ jobs:
         run: |
           # Create docker context directory
           mkdir -p docker/riderhub
-          
+
           # Copy Flarum application to docker context
           cp -r src/riderhub/* docker/riderhub/
-          
+
           # Copy Dockerfile to correct location
           cp docker/riderhub/Dockerfile docker/riderhub/
 
@@ -114,7 +114,7 @@ jobs:
           # Install Node.js for frontend build
           curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
           sudo apt-get install -y nodejs
-          
+
           # Build React frontend (if frontend exists)
           if [ -d "src/riderhub/public" ]; then
             cd src/riderhub
@@ -139,9 +139,9 @@ jobs:
           POSTS_TABLE=$(terraform output -raw dynamodb_posts_table 2>/dev/null || echo "riderhub-posts")
           COMMENTS_TABLE=$(terraform output -raw dynamodb_comments_table 2>/dev/null || echo "riderhub-comments")
           S3_BUCKET=$(terraform output -raw s3_bucket_name 2>/dev/null || echo "riderhub-media")
-          
+
           cd ..
-          
+
           # Run Ansible playbook with dynamic variables
           ansible-playbook ansible/riderhub.yml \
             -e dynamodb_posts_table=$POSTS_TABLE \
