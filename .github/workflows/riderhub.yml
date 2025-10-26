@@ -1,0 +1,102 @@
+name: RiderHub CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: riderhub
+  ECS_SERVICE: riderhub-api
+  ECS_CLUSTER: riderhub-cluster
+  ECS_TASK_DEFINITION: riderhub-task
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: mbstring, dom, fileinfo, mysql
+        coverage: none
+        
+    - name: Install Composer dependencies
+      run: |
+        cd src/riderhub
+        composer install --prefer-dist --no-progress
+        
+    - name: Run PHP tests
+      run: |
+        cd src/riderhub
+        vendor/bin/phpunit --configuration phpunit.xml
+        
+  build-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+      
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build a docker container and push it to ECR
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./docker/riderhub
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        
+    - name: Deploy to Lambda
+      run: |
+        aws lambda update-function-code \
+          --function-name riderhub-api \
+          --image-uri ${{ steps.build-image.outputs.image }}
+          
+    - name: Deploy to Amplify
+      run: |
+        # Build React frontend
+        cd src/riderhub
+        npm install
+        npm run build
+        
+        # Deploy to Amplify (assuming Amplify app is already configured)
+        aws amplify start-deployment \
+          --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+          --branch-name main
+          
+    - name: Run Terraform Apply
+      run: |
+        cd terraform
+        terraform init
+        terraform plan
+        terraform apply -auto-approve
+        
+    - name: Run Ansible Configuration
+      run: |
+        ansible-playbook ansible/riderhub.yml \
+          -e dynamodb_posts_table=riderhub-posts \
+          -e dynamodb_comments_table=riderhub-comments \
+          -e s3_media_bucket=riderhub-media
