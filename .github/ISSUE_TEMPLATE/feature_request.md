@@ -1,41 +1,41 @@
 ---
-name: 기능 요청
-about: 이 프로젝트에 대한 아이디어를 제안해주세요
+name: Feature Request
+about: Suggest an idea for this project
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''
 
 ---
 
-## 🚀 기능 요청
-원하는 기능에 대한 명확하고 간결한 설명을 작성해주세요.
+## 🚀 Feature Request
+Provide a clear and concise description of the desired feature.
 
-## 💡 동기
-이 기능이 왜 필요한지 설명해주세요. 어떤 문제를 해결하거나 어떤 개선을 가져올 수 있나요?
+## 💡 Motivation
+Explain why this feature is needed. What problem does it solve or what improvement does it bring?
 
-## 📝 상세 설명
-원하는 기능에 대한 자세한 설명을 작성해주세요.
+## 📝 Detailed Description
+Provide a detailed description of the desired feature.
 
-## 🎯 사용 사례
-이 기능이 어떻게 사용될지 구체적인 예시를 제공해주세요.
+## 🎯 Use Cases
+Provide specific examples of how this feature would be used.
 
-## 🔄 대안
-고려해본 다른 해결책이나 기능이 있다면 설명해주세요.
+## 🔄 Alternatives
+Describe any alternative solutions or features you've considered.
 
-## 📋 추가 컨텍스트
-기능 요청에 대한 다른 컨텍스트나 스크린샷을 추가해주세요.
+## 📋 Additional Context
+Add any other context or screenshots about the feature request.
 
-## 🏷️ 우선순위
-- [ ] 높음 (즉시 필요)
-- [ ] 중간 (가까운 시일 내 필요)
-- [ ] 낮음 (나중에 고려)
+## 🏷️ Priority
+- [ ] High (needed immediately)
+- [ ] Medium (needed in near future)
+- [ ] Low (consider later)
 
-## 🔧 구현 복잡도
-- [ ] 간단 (1-2일)
-- [ ] 보통 (1주일)
-- [ ] 복잡 (2주일 이상)
+## 🔧 Implementation Complexity
+- [ ] Simple (1-2 days)
+- [ ] Medium (1 week)
+- [ ] Complex (2+ weeks)
 
-## ✅ 체크리스트
-- [ ] 이 기능 요청이 기존 이슈와 중복되지 않는지 확인했습니다
-- [ ] 이 기능이 프로젝트의 목표와 일치하는지 확인했습니다
-- [ ] 구체적인 사용 사례를 제공했습니다
+## ✅ Checklist
+- [ ] I have checked that this feature request is not a duplicate
+- [ ] I have verified this feature aligns with the project goals
+- [ ] I have provided specific use cases

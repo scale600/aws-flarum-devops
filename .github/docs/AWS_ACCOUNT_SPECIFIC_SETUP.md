@@ -1,53 +1,53 @@
-# AWS 계정별 설정 가이드
+# AWS Account-Specific Setup Guide
 
-**AWS 계정 ID**: `753523452116`  
-**리전**: `us-east-1`
+**AWS Account ID**: `753523452116`  
+**Region**: `us-east-1`
 
-이 문서는 특정 AWS 계정에 맞춘 구체적인 설정 방법을 제공합니다.
+This document provides specific setup instructions tailored for this AWS account.
 
-## 🔐 GitHub Secrets 설정 값
+## 🔐 GitHub Secrets Configuration Values
 
-### **필수 시크릿들**
+### **Required Secrets**
 
-| 시크릿 이름             | 값         | 설명                          |
-| ----------------------- | ---------- | ----------------------------- |
-| `AWS_ACCESS_KEY_ID`     | `AKIA...`  | IAM 사용자의 액세스 키 ID     |
-| `AWS_SECRET_ACCESS_KEY` | `wJalr...` | IAM 사용자의 시크릿 액세스 키 |
-| `AMPLIFY_APP_ID`        | `d...`     | Amplify 앱 ID                 |
+| Secret Name             | Value        | Description                      |
+| ----------------------- | ------------ | -------------------------------- |
+| `AWS_ACCESS_KEY_ID`     | `AKIA...`    | IAM user's access key ID         |
+| `AWS_SECRET_ACCESS_KEY` | `wJalr...`   | IAM user's secret access key     |
+| `AMPLIFY_APP_ID`        | `d...`       | Amplify app ID                   |
 
-### **추가 권장 시크릿들**
+### **Additional Recommended Secrets**
 
-| 시크릿 이름               | 값                        | 설명                   |
-| ------------------------- | ------------------------- | ---------------------- |
-| `AWS_REGION`              | `us-east-1`               | AWS 리전               |
-| `ECR_REPOSITORY`          | `riderhub`                | ECR 저장소 이름        |
-| `LAMBDA_FUNCTION_NAME`    | `riderhub-api`            | Lambda 함수 이름       |
-| `DYNAMODB_POSTS_TABLE`    | `riderhub-posts`          | DynamoDB 포스트 테이블 |
-| `DYNAMODB_COMMENTS_TABLE` | `riderhub-comments`       | DynamoDB 댓글 테이블   |
-| `S3_MEDIA_BUCKET`         | `riderhub-media-xxxxxxxx` | S3 미디어 버킷         |
+| Secret Name               | Value                      | Description                |
+| ------------------------- | -------------------------- | -------------------------- |
+| `AWS_REGION`              | `us-east-1`                | AWS region                 |
+| `ECR_REPOSITORY`          | `riderhub`                 | ECR repository name        |
+| `LAMBDA_FUNCTION_NAME`    | `riderhub-api`             | Lambda function name       |
+| `DYNAMODB_POSTS_TABLE`    | `riderhub-posts`           | DynamoDB posts table       |
+| `DYNAMODB_COMMENTS_TABLE` | `riderhub-comments`        | DynamoDB comments table    |
+| `S3_MEDIA_BUCKET`         | `riderhub-media-xxxxxxxx`  | S3 media bucket            |
 
-## 🏗️ AWS 리소스 ARN 정보
+## 🏗️ AWS Resource ARN Information
 
-### **ECR 저장소**
+### **ECR Repository**
 
 ```
 Repository URI: 753523452116.dkr.ecr.us-east-1.amazonaws.com/riderhub
 ```
 
-### **Lambda 함수**
+### **Lambda Function**
 
 ```
 Function ARN: arn:aws:lambda:us-east-1:753523452116:function:riderhub-api
 ```
 
-### **DynamoDB 테이블**
+### **DynamoDB Tables**
 
 ```
 Posts Table ARN: arn:aws:dynamodb:us-east-1:753523452116:table/riderhub-posts
 Comments Table ARN: arn:aws:dynamodb:us-east-1:753523452116:table/riderhub-comments
 ```
 
-### **S3 버킷**
+### **S3 Bucket**
 
 ```
 Media Bucket ARN: arn:aws:s3:::riderhub-media-xxxxxxxx
@@ -56,219 +56,280 @@ Media Bucket ARN: arn:aws:s3:::riderhub-media-xxxxxxxx
 ### **API Gateway**
 
 ```
-API Gateway ARN: arn:aws:execute-api:us-east-1:753523452116:xxxxxxxxxx/*
+API Gateway URL: https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/production
 ```
 
-## 🔑 IAM 정책 설정
+### **SNS Topic**
 
-### **RiderHubCIPolicy.json**
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ecr:GetAuthorizationToken",
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer",
-        "ecr:BatchGetImage",
-        "ecr:InitiateLayerUpload",
-        "ecr:UploadLayerPart",
-        "ecr:CompleteLayerUpload",
-        "ecr:PutImage",
-        "lambda:UpdateFunctionCode",
-        "lambda:GetFunction",
-        "lambda:ListFunctions",
-        "iam:PassRole",
-        "iam:GetRole",
-        "dynamodb:CreateTable",
-        "dynamodb:DescribeTable",
-        "dynamodb:UpdateTable",
-        "dynamodb:DeleteTable",
-        "dynamodb:ListTables",
-        "s3:CreateBucket",
-        "s3:DeleteBucket",
-        "s3:GetBucketLocation",
-        "s3:GetBucketVersioning",
-        "s3:ListBucket",
-        "s3:PutBucketVersioning",
-        "s3:PutBucketPublicAccessBlock",
-        "apigateway:*",
-        "sns:CreateTopic",
-        "sns:ListTopics",
-        "amplify:StartDeployment",
-        "amplify:GetApp",
-        "amplify:ListApps",
-        "cloudformation:CreateStack",
-        "cloudformation:UpdateStack",
-        "cloudformation:DeleteStack",
-        "cloudformation:DescribeStacks",
-        "cloudformation:DescribeStackEvents"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
+```
+Notifications Topic ARN: arn:aws:sns:us-east-1:753523452116:riderhub-notifications
 ```
 
-## 🚀 AWS CLI 명령어 (계정별)
+## 🔧 Quick Setup Commands
 
-### **IAM 사용자 생성**
-
+### 1. Verify AWS Account
 ```bash
-# IAM 사용자 생성
+# Check current AWS account
+aws sts get-caller-identity
+
+# Expected output:
+# {
+#     "UserId": "AIDACKCEVSQ6C2EXAMPLE",
+#     "Account": "753523452116",
+#     "Arn": "arn:aws:iam::753523452116:user/YourUsername"
+# }
+```
+
+### 2. Create IAM User for CI/CD
+```bash
+# Create IAM user
 aws iam create-user --user-name riderhub-ci-cd
 
-# 정책 생성
-aws iam create-policy \
-  --policy-name RiderHubCIPolicy \
-  --policy-document file://RiderHubCIPolicy.json
+# Create and attach policy
+aws iam put-user-policy --user-name riderhub-ci-cd --policy-name RiderHubCIPolicy --policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecr:*",
+                "lambda:*",
+                "dynamodb:*",
+                "s3:*",
+                "apigateway:*",
+                "iam:*",
+                "sns:*",
+                "amplify:*",
+                "cloudformation:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}'
 
-# 정책 연결
-aws iam attach-user-policy \
-  --user-name riderhub-ci-cd \
-  --policy-arn arn:aws:iam::753523452116:policy/RiderHubCIPolicy
-
-# 액세스 키 생성
+# Create access key
 aws iam create-access-key --user-name riderhub-ci-cd
 ```
 
-### **ECR 저장소 생성**
-
+### 3. Create ECR Repository
 ```bash
-# ECR 저장소 생성
-aws ecr create-repository \
-  --repository-name riderhub \
-  --region us-east-1
+# Create ECR repository
+aws ecr create-repository --repository-name riderhub --region us-east-1
 
-# 로그인 토큰 확인
-aws ecr get-login-password --region us-east-1
+# Get login token
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 753523452116.dkr.ecr.us-east-1.amazonaws.com
 ```
 
-### **Amplify 앱 생성**
-
+### 4. Create DynamoDB Tables
 ```bash
-# Amplify 앱 생성
-aws amplify create-app \
-  --name riderhub \
-  --repository https://github.com/scale600/aws-flarum-devops-serverless \
-  --platform WEB \
-  --region us-east-1
+# Create posts table
+aws dynamodb create-table \
+    --table-name riderhub-posts \
+    --attribute-definitions \
+        AttributeName=postId,AttributeType=S \
+        AttributeName=userId,AttributeType=S \
+    --key-schema \
+        AttributeName=postId,KeyType=HASH \
+    --global-secondary-indexes \
+        IndexName=userId-index,KeySchema=[{AttributeName=userId,KeyType=HASH}],Projection={ProjectionType=ALL} \
+    --billing-mode PAY_PER_REQUEST \
+    --region us-east-1
 
-# App ID 확인
-aws amplify list-apps --region us-east-1 --query 'apps[?name==`riderhub`].appId' --output text
+# Create comments table
+aws dynamodb create-table \
+    --table-name riderhub-comments \
+    --attribute-definitions \
+        AttributeName=commentId,AttributeType=S \
+        AttributeName=postId,AttributeType=S \
+    --key-schema \
+        AttributeName=commentId,KeyType=HASH \
+    --global-secondary-indexes \
+        IndexName=postId-index,KeySchema=[{AttributeName=postId,KeyType=HASH}],Projection={ProjectionType=ALL} \
+    --billing-mode PAY_PER_REQUEST \
+    --region us-east-1
 ```
 
-## 🔍 AWS 콘솔 직접 링크
-
-### **IAM 콘솔**
-
-```
-https://console.aws.amazon.com/iam/home?region=us-east-1#/users
-```
-
-### **ECR 콘솔**
-
-```
-https://console.aws.amazon.com/ecr/repositories?region=us-east-1
-```
-
-### **Lambda 콘솔**
-
-```
-https://console.aws.amazon.com/lambda/home?region=us-east-1#/functions
-```
-
-### **DynamoDB 콘솔**
-
-```
-https://console.aws.amazon.com/dynamodb/home?region=us-east-1#tables:
-```
-
-### **S3 콘솔**
-
-```
-https://console.aws.amazon.com/s3/home?region=us-east-1
-```
-
-### **Amplify 콘솔**
-
-```
-https://console.aws.amazon.com/amplify/home?region=us-east-1#/
-```
-
-### **API Gateway 콘솔**
-
-```
-https://console.aws.amazon.com/apigateway/main/apis?region=us-east-1
-```
-
-## 📊 리소스 확인 명령어
-
-### **모든 리소스 상태 확인**
-
+### 5. Create S3 Bucket
 ```bash
-# AWS 계정 정보 확인
-aws sts get-caller-identity
+# Create S3 bucket with unique suffix
+BUCKET_NAME="riderhub-media-$(openssl rand -hex 4)"
+aws s3 mb s3://$BUCKET_NAME --region us-east-1
 
-# ECR 저장소 확인
-aws ecr describe-repositories --repository-names riderhub --region us-east-1
+# Enable versioning
+aws s3api put-bucket-versioning --bucket $BUCKET_NAME --versioning-configuration Status=Enabled
 
-# Lambda 함수 확인
-aws lambda list-functions --region us-east-1 --query 'Functions[?FunctionName==`riderhub-api`]'
-
-# DynamoDB 테이블 확인
-aws dynamodb list-tables --region us-east-1 --query 'TableNames[?contains(@, `riderhub`)]'
-
-# S3 버킷 확인
-aws s3 ls | grep riderhub
-
-# Amplify 앱 확인
-aws amplify list-apps --region us-east-1 --query 'apps[?name==`riderhub`]'
+# Block public access
+aws s3api put-public-access-block \
+    --bucket $BUCKET_NAME \
+    --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
 ```
 
-## 🚨 문제 해결
+## 🌐 AWS Console Direct Links
 
-### **권한 오류 시**
+### **Main Services**
+- [AWS Console Home](https://console.aws.amazon.com/)
+- [IAM Console](https://console.aws.amazon.com/iam/)
+- [ECR Console](https://console.aws.amazon.com/ecr/)
+- [Lambda Console](https://console.aws.amazon.com/lambda/)
+- [DynamoDB Console](https://console.aws.amazon.com/dynamodb/)
+- [S3 Console](https://console.aws.amazon.com/s3/)
+- [API Gateway Console](https://console.aws.amazon.com/apigateway/)
+- [Amplify Console](https://console.aws.amazon.com/amplify/)
+- [SNS Console](https://console.aws.amazon.com/sns/)
 
+### **Account-Specific Links**
+- [Account 753523452116 IAM Users](https://console.aws.amazon.com/iam/home#/users)
+- [Account 753523452116 ECR Repositories](https://console.aws.amazon.com/ecr/repositories?region=us-east-1)
+- [Account 753523452116 Lambda Functions](https://console.aws.amazon.com/lambda/home?region=us-east-1#/functions)
+- [Account 753523452116 DynamoDB Tables](https://console.aws.amazon.com/dynamodb/home?region=us-east-1#/tables)
+- [Account 753523452116 S3 Buckets](https://console.aws.amazon.com/s3/home?region=us-east-1)
+
+## 🔍 Resource Verification
+
+### Check All Resources
 ```bash
-# 현재 사용자 권한 확인
-aws iam list-attached-user-policies --user-name $(aws sts get-caller-identity --query 'Arn' --output text | cut -d'/' -f2)
+# List all ECR repositories
+aws ecr describe-repositories --region us-east-1
 
-# 정책 내용 확인
-aws iam get-policy --policy-arn arn:aws:iam::753523452116:policy/RiderHubCIPolicy
+# List all Lambda functions
+aws lambda list-functions --region us-east-1
+
+# List all DynamoDB tables
+aws dynamodb list-tables --region us-east-1
+
+# List all S3 buckets
+aws s3 ls
+
+# List all API Gateways
+aws apigateway get-rest-apis --region us-east-1
+
+# List all Amplify apps
+aws amplify list-apps --region us-east-1
+
+# List all SNS topics
+aws sns list-topics --region us-east-1
 ```
 
-### **리소스 생성 오류 시**
-
+### Check Resource Status
 ```bash
-# CloudFormation 스택 확인
-aws cloudformation list-stacks --region us-east-1 --query 'StackSummaries[?contains(StackName, `riderhub`)]'
+# Check DynamoDB table status
+aws dynamodb describe-table --table-name riderhub-posts --region us-east-1 --query 'Table.TableStatus'
+aws dynamodb describe-table --table-name riderhub-comments --region us-east-1 --query 'Table.TableStatus'
 
-# Terraform 상태 확인
+# Check Lambda function status
+aws lambda get-function --function-name riderhub-api --region us-east-1 --query 'Configuration.State'
+
+# Check S3 bucket status
+aws s3api head-bucket --bucket riderhub-media-xxxxxxxx
+```
+
+## 🚀 Deployment Commands
+
+### Terraform Deployment
+```bash
+# Navigate to terraform directory
 cd terraform
-terraform show
+
+# Initialize Terraform
+terraform init
+
+# Plan deployment
+terraform plan
+
+# Apply infrastructure
+terraform apply -auto-approve
+
+# Check outputs
+terraform output
 ```
 
-## 📋 체크리스트
+### Ansible Configuration
+```bash
+# Run Ansible playbook
+ansible-playbook ansible/riderhub.yml \
+    -e dynamodb_posts_table=riderhub-posts \
+    -e dynamodb_comments_table=riderhub-comments \
+    -e s3_media_bucket=riderhub-media-xxxxxxxx \
+    -e aws_region=us-east-1 \
+    -e app_url=https://riderhub.amplifyapp.com \
+    -e app_env=production \
+    -e app_debug=false
+```
 
-### **GitHub Secrets 설정 전 확인사항**
+### Docker Build and Push
+```bash
+# Build Docker image
+docker build -t riderhub ./docker/riderhub
 
-- [ ] AWS CLI가 올바르게 설정되었는지 확인
-- [ ] IAM 사용자가 생성되었는지 확인
-- [ ] 필요한 권한이 부여되었는지 확인
-- [ ] ECR 저장소가 생성되었는지 확인
-- [ ] Amplify 앱이 생성되었는지 확인
+# Tag for ECR
+docker tag riderhub:latest 753523452116.dkr.ecr.us-east-1.amazonaws.com/riderhub:latest
 
-### **GitHub Secrets 설정 후 확인사항**
+# Push to ECR
+docker push 753523452116.dkr.ecr.us-east-1.amazonaws.com/riderhub:latest
+```
 
-- [ ] 모든 필수 시크릿이 설정되었는지 확인
-- [ ] 시크릿 값이 올바른지 확인
-- [ ] CI/CD 파이프라인이 정상 실행되는지 확인
-- [ ] AWS 리소스가 올바르게 생성되는지 확인
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Resource Already Exists
+```bash
+# If resources already exist, you can either:
+# 1. Import existing resources to Terraform state
+terraform import aws_dynamodb_table.posts riderhub-posts
+
+# 2. Or delete existing resources and recreate
+aws dynamodb delete-table --table-name riderhub-posts --region us-east-1
+```
+
+#### Permission Denied
+```bash
+# Check IAM user permissions
+aws iam list-attached-user-policies --user-name riderhub-ci-cd
+
+# Check user policies
+aws iam list-user-policies --user-name riderhub-ci-cd
+```
+
+#### Region Mismatch
+```bash
+# Ensure all commands use us-east-1 region
+export AWS_DEFAULT_REGION=us-east-1
+
+# Or add --region us-east-1 to all AWS CLI commands
+```
+
+## 📊 Cost Monitoring
+
+### Check Free Tier Usage
+1. Go to [AWS Billing Console](https://console.aws.amazon.com/billing/)
+2. Click "Free Tier" in the left menu
+3. Monitor usage for each service
+4. Set up billing alerts if needed
+
+### Expected Monthly Costs
+- **Lambda**: $0 (within Free Tier limits)
+- **DynamoDB**: $0 (within Free Tier limits)
+- **S3**: $0 (within Free Tier limits)
+- **API Gateway**: $0 (within Free Tier limits)
+- **Amplify**: $0 (free hosting)
+- **SNS**: $0 (within Free Tier limits)
+
+## 📚 Additional Resources
+
+- [AWS Free Tier Documentation](https://aws.amazon.com/free/)
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Ansible AWS Modules](https://docs.ansible.com/ansible/latest/collections/amazon/aws/)
+- [Docker ECR Integration](https://docs.aws.amazon.com/ecr/latest/userguide/docker-push-ecr-image.html)
+
+## 🆘 Support
+
+If you encounter issues specific to this AWS account:
+1. Check the troubleshooting section above
+2. Review AWS CloudTrail logs
+3. Check GitHub Actions logs
+4. Create an issue in the repository with account-specific details
 
 ---
 
-**참고**: 이 설정은 AWS 계정 `753523452116`에 특화되어 있습니다. 다른 계정을 사용하는 경우 계정 ID를 변경해야 합니다.
+**Note**: This guide is specifically for AWS Account `753523452116`. Do not use these ARNs or resource names with other AWS accounts.

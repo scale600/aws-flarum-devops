@@ -1,53 +1,53 @@
-## 📝 Pull Request 설명
-이 PR이 무엇을 하는지 명확하고 간결하게 설명해주세요.
+## 📝 Pull Request Description
+Provide a clear and concise description of what this PR does.
 
-## 🔗 관련 이슈
-이 PR이 해결하는 이슈를 링크해주세요.
+## 🔗 Related Issues
+Link the issue this PR resolves:
 - Fixes #(issue number)
 
-## 🎯 변경 사항
-- [ ] 새로운 기능 추가
-- [ ] 버그 수정
-- [ ] 문서 업데이트
-- [ ] 리팩토링
-- [ ] 성능 개선
-- [ ] 보안 개선
+## 🎯 Type of Changes
+- [ ] New feature
+- [ ] Bug fix
+- [ ] Documentation update
+- [ ] Refactoring
+- [ ] Performance improvement
+- [ ] Security improvement
 
-## 📋 변경 내용
-구체적인 변경 사항을 나열해주세요:
+## 📋 Changes Made
+List specific changes made:
 
 - 
 - 
 - 
 
-## 🧪 테스트
-이 변경사항을 어떻게 테스트했는지 설명해주세요:
+## 🧪 Testing
+Describe how you tested these changes:
 
-- [ ] 로컬에서 테스트 완료
-- [ ] AWS 환경에서 테스트 완료
-- [ ] CI/CD 파이프라인 테스트 통과
-- [ ] 기존 기능에 영향 없음 확인
+- [ ] Tested locally
+- [ ] Tested in AWS environment
+- [ ] CI/CD pipeline tests passed
+- [ ] Verified no impact on existing functionality
 
-## 📸 스크린샷
-해당하는 경우 변경사항을 보여주는 스크린샷을 추가해주세요.
+## 📸 Screenshots
+If applicable, add screenshots showing the changes.
 
-## 🔍 체크리스트
-- [ ] 코드가 프로젝트의 코딩 스타일을 따릅니다
-- [ ] 자체 검토를 수행했습니다
-- [ ] 코드에 적절한 주석을 추가했습니다
-- [ ] 문서를 업데이트했습니다 (필요한 경우)
-- [ ] 변경사항이 새로운 경고를 생성하지 않습니다
-- [ ] 새로운 테스트를 추가했습니다 (필요한 경우)
-- [ ] 새로운 테스트와 기존 테스트가 모두 통과합니다
+## 🔍 Checklist
+- [ ] Code follows the project's coding style
+- [ ] Self-review has been performed
+- [ ] Appropriate comments have been added to code
+- [ ] Documentation has been updated (if needed)
+- [ ] Changes do not generate new warnings
+- [ ] New tests have been added (if needed)
+- [ ] New and existing tests pass
 
-## 🚀 배포 관련
-- [ ] 이 변경사항은 데이터베이스 마이그레이션을 필요로 합니다
-- [ ] 이 변경사항은 환경 변수 변경을 필요로 합니다
-- [ ] 이 변경사항은 AWS 리소스 변경을 필요로 합니다
+## 🚀 Deployment Related
+- [ ] This change requires database migration
+- [ ] This change requires environment variable changes
+- [ ] This change requires AWS resource changes
 
-## 📚 추가 정보
-리뷰어가 알아야 할 추가 정보가 있다면 여기에 작성해주세요.
+## 📚 Additional Information
+Add any additional information reviewers should know.
 
 ---
 
-**참고**: 이 PR은 AWS Free Tier 환경에서 테스트되었습니다.
+**Note**: This PR has been tested in an AWS Free Tier environment.
