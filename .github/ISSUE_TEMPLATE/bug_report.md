@@ -1,47 +1,47 @@
 ---
-name: 버그 리포트
-about: 버그를 신고하여 프로젝트 개선에 도움을 주세요
+name: Bug Report
+about: Report a bug to help improve the project
 title: '[BUG] '
 labels: bug
 assignees: ''
 
 ---
 
-## 🐛 버그 설명
-버그에 대한 명확하고 간결한 설명을 작성해주세요.
+## 🐛 Bug Description
+Provide a clear and concise description of the bug.
 
-## 🔄 재현 단계
-버그를 재현하는 단계를 작성해주세요:
+## 🔄 Steps to Reproduce
+Steps to reproduce the bug:
 
-1. '...'로 이동
-2. '...'를 클릭
-3. '...'까지 스크롤
-4. 오류 확인
+1. Go to '...'
+2. Click on '...'
+3. Scroll down to '...'
+4. See error
 
-## 🎯 예상 동작
-예상했던 동작을 설명해주세요.
+## 🎯 Expected Behavior
+Describe what you expected to happen.
 
-## 📸 스크린샷
-해당하는 경우 스크린샷을 추가하여 문제를 설명해주세요.
+## 📸 Screenshots
+If applicable, add screenshots to help explain the problem.
 
-## 🖥️ 환경 정보
-- OS: [예: macOS, Windows, Linux]
-- 브라우저: [예: Chrome, Safari, Firefox]
-- 버전: [예: 22]
-- AWS CLI 버전: [예: 2.0.0]
-- Terraform 버전: [예: 1.6.0]
+## 🖥️ Environment Information
+- OS: [e.g. macOS, Windows, Linux]
+- Browser: [e.g. Chrome, Safari, Firefox]
+- Version: [e.g. 22]
+- AWS CLI Version: [e.g. 2.0.0]
+- Terraform Version: [e.g. 1.6.0]
 
-## 📋 추가 컨텍스트
-문제에 대한 다른 컨텍스트나 정보를 추가해주세요.
+## 📋 Additional Context
+Add any other context or information about the problem.
 
-## 🔍 로그 정보
-해당하는 경우 관련 로그를 첨부해주세요:
+## 🔍 Log Information
+If applicable, attach relevant logs:
 
 ```
-로그 내용을 여기에 붙여넣기
+Paste log content here
 ```
 
-## ✅ 체크리스트
-- [ ] 이 이슈가 기존 이슈와 중복되지 않는지 확인했습니다
-- [ ] 최신 버전에서 문제가 발생하는지 확인했습니다
-- [ ] 문제를 재현할 수 있는지 확인했습니다
+## ✅ Checklist
+- [ ] I have checked that this issue is not a duplicate
+- [ ] I have verified the issue occurs in the latest version
+- [ ] I have confirmed I can reproduce the issue

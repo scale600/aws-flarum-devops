@@ -1,119 +1,82 @@
-# GitHub Secrets 설정 가이드
+# GitHub Secrets Setup Guide
 
-이 문서는 RiderHub 프로젝트의 GitHub Actions CI/CD 파이프라인에서 사용할 시크릿들을 설정하는 방법을 설명합니다.
+This document explains how to set up the secrets required for the RiderHub project's GitHub Actions CI/CD pipeline.
 
-## 📋 목차
+## 📋 Table of Contents
 
-- [필수 GitHub Secrets](#필수-github-secrets)
-- [GitHub Secrets 설정 방법](#github-secrets-설정-방법)
-- [AWS 자격 증명 생성](#aws-자격-증명-생성)
-- [AWS Amplify 설정](#aws-amplify-설정)
-- [추가 권장 시크릿들](#추가-권장-시크릿들)
-- [보안 모범 사례](#보안-모범-사례)
-- [설정 완료 후 확인](#설정-완료-후-확인)
+- [Required GitHub Secrets](#required-github-secrets)
+- [GitHub Secrets Setup Method](#github-secrets-setup-method)
+- [AWS Credentials Generation](#aws-credentials-generation)
+- [AWS Amplify Setup](#aws-amplify-setup)
+- [Additional Recommended Secrets](#additional-recommended-secrets)
+- [Security Best Practices](#security-best-practices)
+- [Post-Setup Verification](#post-setup-verification)
 
-## 🔐 필수 GitHub Secrets
+## 🔐 Required GitHub Secrets
 
-GitHub Actions에서 사용할 다음 시크릿들을 설정해야 합니다:
+The following secrets need to be configured for GitHub Actions:
 
-| 시크릿 이름 | 설명 | 예시 값 |
-|------------|------|---------|
-| `AWS_ACCESS_KEY_ID` | AWS 액세스 키 ID | `AKIAIOSFODNN7EXAMPLE` |
-| `AWS_SECRET_ACCESS_KEY` | AWS 시크릿 액세스 키 | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` |
-| `AMPLIFY_APP_ID` | AWS Amplify 앱 ID | `d1234567890` |
+| Secret Name | Description | Example Value |
+|-------------|-------------|---------------|
+| `AWS_ACCESS_KEY_ID` | AWS Access Key ID | `AKIAIOSFODNN7EXAMPLE` |
+| `AWS_SECRET_ACCESS_KEY` | AWS Secret Access Key | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` |
+| `AMPLIFY_APP_ID` | AWS Amplify App ID | `d1234567890` |
 
-## 🛠️ GitHub Secrets 설정 방법
+## 🛠️ GitHub Secrets Setup Method
 
-### 1. GitHub 저장소 접속
-- https://github.com/scale600/aws-flarum-devops-serverless
+### 1. Access GitHub Repository
+- Navigate to: https://github.com/scale600/aws-flarum-devops-serverless
 
-### 2. Settings 탭 클릭
-- 저장소 상단의 "Settings" 탭을 클릭합니다.
+### 2. Click Settings Tab
+- Click the "Settings" tab at the top of the repository.
 
-### 3. Secrets 메뉴 접근
-- 왼쪽 메뉴에서 "Secrets and variables" → "Actions"를 클릭합니다.
+### 3. Access Secrets Menu
+- Click "Secrets and variables" → "Actions" in the left menu.
 
-### 4. 새 시크릿 추가
-- "New repository secret" 버튼을 클릭합니다.
-- Name과 Secret 값을 입력하고 "Add secret"을 클릭합니다.
+### 4. Add New Secret
+- Click "New repository secret" button.
+- Enter Name and Secret value, then click "Add secret".
 
-## 🔑 AWS 자격 증명 생성
+## 🔑 AWS Credentials Generation
 
-### IAM 사용자 생성
+### Create IAM User
 
 ```bash
-# 1. IAM 사용자 생성
+# 1. Create IAM user
 aws iam create-user --user-name riderhub-ci-cd
 
-# 2. IAM 정책 생성 (RiderHubCIPolicy.json 파일 생성)
+# 2. Create IAM policy (create RiderHubCIPolicy.json file)
 cat > RiderHubCIPolicy.json << 'EOF'
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ecr:GetAuthorizationToken",
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer",
-        "ecr:BatchGetImage",
-        "ecr:InitiateLayerUpload",
-        "ecr:UploadLayerPart",
-        "ecr:CompleteLayerUpload",
-        "ecr:PutImage",
-        "lambda:UpdateFunctionCode",
-        "lambda:GetFunction",
-        "lambda:ListFunctions",
-        "iam:PassRole",
-        "iam:GetRole",
-        "dynamodb:CreateTable",
-        "dynamodb:DescribeTable",
-        "dynamodb:UpdateTable",
-        "dynamodb:DeleteTable",
-        "dynamodb:ListTables",
-        "s3:CreateBucket",
-        "s3:DeleteBucket",
-        "s3:GetBucketLocation",
-        "s3:GetBucketVersioning",
-        "s3:ListBucket",
-        "s3:PutBucketVersioning",
-        "s3:PutBucketPublicAccessBlock",
-        "apigateway:*",
-        "sns:CreateTopic",
-        "sns:ListTopics",
-        "amplify:StartDeployment",
-        "amplify:GetApp",
-        "amplify:ListApps",
-        "cloudformation:CreateStack",
-        "cloudformation:UpdateStack",
-        "cloudformation:DeleteStack",
-        "cloudformation:DescribeStacks",
-        "cloudformation:DescribeStackEvents"
-      ],
-      "Resource": "*"
-    }
-  ]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecr:*",
+                "lambda:*",
+                "dynamodb:*",
+                "s3:*",
+                "apigateway:*",
+                "iam:*",
+                "sns:*",
+                "amplify:*",
+                "cloudformation:*"
+            ],
+            "Resource": "*"
+        }
+    ]
 }
 EOF
 
-# 3. IAM 정책 생성
-aws iam create-policy \
-  --policy-name RiderHubCIPolicy \
-  --policy-document file://RiderHubCIPolicy.json
+# 3. Attach policy to user
+aws iam put-user-policy --user-name riderhub-ci-cd --policy-name RiderHubCIPolicy --policy-document file://RiderHubCIPolicy.json
 
-# 4. 정책을 사용자에게 연결
-aws iam attach-user-policy \
-  --user-name riderhub-ci-cd \
-  --policy-arn arn:aws:iam::YOUR_ACCOUNT_ID:policy/RiderHubCIPolicy
-
-# 5. 액세스 키 생성
+# 4. Create access key
 aws iam create-access-key --user-name riderhub-ci-cd
 ```
 
-### 액세스 키 정보 확인
-
-위 명령어 실행 후 다음과 같은 출력을 받게 됩니다:
-
+### Expected Output
 ```json
 {
     "AccessKey": {
@@ -121,127 +84,163 @@ aws iam create-access-key --user-name riderhub-ci-cd
         "AccessKeyId": "AKIAIOSFODNN7EXAMPLE",
         "Status": "Active",
         "SecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-        "CreateDate": "2024-01-01T00:00:00Z"
+        "CreateDate": "2023-01-01T00:00:00Z"
     }
 }
 ```
 
-**중요**: `SecretAccessKey`는 한 번만 표시되므로 안전한 곳에 저장하세요.
+### Save Credentials
+- **Important**: Save the `AccessKeyId` and `SecretAccessKey` values immediately
+- These values cannot be retrieved again after creation
 
-## 🚀 AWS Amplify 설정
+## 🚀 AWS Amplify Setup
 
-### Amplify 앱 생성
-
-```bash
-# 1. Amplify 앱 생성
-aws amplify create-app \
-  --name riderhub \
-  --repository https://github.com/scale600/aws-flarum-devops-serverless \
-  --platform WEB \
-  --environment-variables '{"_LIVE_UPDATES":"[{\"name\":\"\",\"pkg\":\"\",\"type\":\"\",\"version\":\"\"}]"}'
-
-# 2. App ID 확인
-aws amplify list-apps --query 'apps[?name==`riderhub`].appId' --output text
-```
-
-### 브랜치 생성
+### 1. Create Amplify App
 
 ```bash
-# main 브랜치 생성
-aws amplify create-branch \
-  --app-id YOUR_APP_ID \
-  --branch-name main \
-  --description "Main branch for RiderHub"
+# Install Amplify CLI
+npm install -g @aws-amplify/cli
+
+# Configure Amplify
+amplify configure
+
+# Create new app
+amplify init
 ```
 
-## 📝 추가 권장 시크릿들
+### 2. Connect to GitHub Repository
 
-더 안전하고 유연한 설정을 위해 다음 시크릿들도 추가하는 것을 권장합니다:
+1. Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
+2. Click "New app" → "Host web app"
+3. Choose "GitHub" as source
+4. Select the repository: `scale600/aws-flarum-devops-serverless`
+5. Choose branch: `main`
+6. Configure build settings (if needed)
+7. Click "Save and deploy"
 
-| 시크릿 이름 | 설명 | 기본값 |
-|------------|------|--------|
-| `AWS_REGION` | AWS 리전 | `us-east-1` |
-| `ECR_REPOSITORY` | ECR 저장소 이름 | `riderhub` |
-| `LAMBDA_FUNCTION_NAME` | Lambda 함수 이름 | `riderhub-api` |
-| `DYNAMODB_POSTS_TABLE` | DynamoDB 포스트 테이블 | `riderhub-posts` |
-| `DYNAMODB_COMMENTS_TABLE` | DynamoDB 댓글 테이블 | `riderhub-comments` |
-| `S3_MEDIA_BUCKET` | S3 미디어 버킷 | `riderhub-media` |
+### 3. Get Amplify App ID
 
-## 🔒 보안 모범 사례
+After creating the app, you'll see the App ID in the URL:
+```
+https://console.aws.amazon.com/amplify/home#/d1234567890
+```
 
-### 1. 최소 권한 원칙
-- IAM 사용자에게 필요한 최소한의 권한만 부여
-- 프로덕션 환경에서는 더 제한적인 권한 사용
+The App ID is: `d1234567890`
 
-### 2. 정기적 로테이션
-- 액세스 키를 90일마다 교체
-- 이전 키는 즉시 비활성화
+## 🔧 Additional Recommended Secrets
 
-### 3. 환경별 분리
-- 개발/스테이징/프로덕션 환경별로 다른 자격 증명 사용
-- 환경별로 별도의 IAM 사용자 생성
+| Secret Name | Description | When to Use |
+|-------------|-------------|-------------|
+| `AWS_REGION` | AWS Region | If different from us-east-1 |
+| `ECR_REPOSITORY` | ECR Repository Name | If different from riderhub |
+| `S3_BUCKET` | S3 Bucket Name | For custom bucket names |
+| `DYNAMODB_TABLE_PREFIX` | DynamoDB Table Prefix | For custom table naming |
 
-### 4. 모니터링
-- CloudTrail을 통한 API 호출 모니터링
-- 비정상적인 활동 감지 시 알림 설정
+## 🔒 Security Best Practices
 
-## ✅ 설정 완료 후 확인
+### 1. Principle of Least Privilege
+- Only grant necessary permissions
+- Use specific resource ARNs instead of wildcards when possible
+- Regularly review and rotate access keys
 
-### 1. 시크릿 설정 확인
-GitHub 저장소의 Settings → Secrets and variables → Actions에서 모든 시크릿이 올바르게 설정되었는지 확인합니다.
-
-### 2. CI/CD 파이프라인 테스트
+### 2. Key Rotation
 ```bash
-# main 브랜치에 푸시하여 파이프라인 트리거
-git add .
-git commit -m "Test CI/CD pipeline"
-git push origin main
+# Create new access key
+aws iam create-access-key --user-name riderhub-ci-cd
+
+# Update GitHub secrets with new keys
+# Delete old access key
+aws iam delete-access-key --user-name riderhub-ci-cd --access-key-id OLD_ACCESS_KEY_ID
 ```
 
-### 3. 워크플로우 실행 확인
-- GitHub 저장소의 "Actions" 탭에서 워크플로우 실행 상태 확인
-- 각 단계별 로그를 확인하여 오류가 없는지 검증
+### 3. Monitor Usage
+- Enable CloudTrail for API monitoring
+- Set up billing alerts
+- Review IAM access logs regularly
 
-### 4. AWS 리소스 생성 확인
-- AWS 콘솔에서 다음 리소스들이 생성되었는지 확인:
-  - ECR 저장소
-  - Lambda 함수
-  - DynamoDB 테이블
-  - S3 버킷
-  - API Gateway
-  - Amplify 앱
+### 4. Environment Separation
+- Use different IAM users for different environments
+- Consider using AWS Organizations for multi-account setups
 
-## 🚨 문제 해결
+## ✅ Post-Setup Verification
 
-### 일반적인 오류들
+### 1. Test AWS Credentials
+```bash
+# Test with AWS CLI
+aws sts get-caller-identity
 
-1. **AWS 자격 증명 오류**
-   - IAM 사용자 권한 확인
-   - 액세스 키가 올바르게 설정되었는지 확인
+# Expected output:
+# {
+#     "UserId": "AIDACKCEVSQ6C2EXAMPLE",
+#     "Account": "753523452116",
+#     "Arn": "arn:aws:iam::753523452116:user/riderhub-ci-cd"
+# }
+```
 
-2. **ECR 권한 오류**
-   - ECR 관련 권한이 IAM 정책에 포함되어 있는지 확인
+### 2. Test GitHub Actions
+1. Make a small change to the repository
+2. Push to main branch
+3. Check GitHub Actions tab for workflow execution
+4. Verify all steps complete successfully
 
-3. **Amplify 배포 오류**
-   - Amplify 앱이 올바르게 생성되었는지 확인
-   - App ID가 정확한지 확인
+### 3. Verify Amplify Connection
+1. Go to Amplify Console
+2. Check if the app is connected to the repository
+3. Verify build settings are correct
 
-### 로그 확인 방법
+## 🔍 Troubleshooting
+
+### Common Issues
+
+#### AWS Credentials Not Working
+```bash
+# Check if credentials are correct
+aws sts get-caller-identity
+
+# If error occurs, verify:
+# 1. Access key ID is correct
+# 2. Secret access key is correct
+# 3. User has necessary permissions
+```
+
+#### Amplify App Not Found
+- Verify the App ID is correct
+- Check if the app exists in the correct AWS region
+- Ensure the app is connected to the repository
+
+#### GitHub Actions Failing
+- Check the Actions tab for error messages
+- Verify all required secrets are set
+- Check AWS CloudTrail for API errors
+
+### Debug Commands
 
 ```bash
-# GitHub Actions 로그 확인
-gh run list --repo scale600/aws-flarum-devops-serverless
-gh run view [RUN_ID] --repo scale600/aws-flarum-devops-serverless
+# Check IAM user policies
+aws iam list-attached-user-policies --user-name riderhub-ci-cd
+
+# Check user permissions
+aws iam simulate-principal-policy --policy-source-arn arn:aws:iam::753523452116:user/riderhub-ci-cd --action-names ecr:CreateRepository --resource-arns "*"
+
+# List Amplify apps
+aws amplify list-apps
 ```
 
-## 📞 지원
+## 📚 Additional Resources
 
-문제가 발생하면 다음을 확인하세요:
+- [GitHub Secrets Documentation](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
+- [AWS IAM Best Practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
+- [AWS Amplify Documentation](https://docs.amplify.aws/)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
 
-1. [GitHub Actions 문서](https://docs.github.com/en/actions)
-2. [AWS IAM 문서](https://docs.aws.amazon.com/iam/)
-3. [AWS Amplify 문서](https://docs.aws.amazon.com/amplify/)
+## 🆘 Support
+
+If you encounter issues:
+1. Check the troubleshooting section above
+2. Review AWS CloudTrail logs
+3. Check GitHub Actions logs
+4. Create an issue in the repository
 
 ---
 
-**참고**: 이 가이드는 AWS Free Tier를 기준으로 작성되었습니다. 프로덕션 환경에서는 추가적인 보안 조치가 필요할 수 있습니다.
+**Note**: This guide is specifically for AWS Account `753523452116`. Adjust the account ID for other AWS accounts.

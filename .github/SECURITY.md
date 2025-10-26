@@ -1,76 +1,76 @@
-# 보안 정책
+# Security Policy
 
-## 🛡️ 보안 보고
+## 🛡️ Security Reporting
 
-보안 취약점을 발견하신 경우, 다음 절차를 따라주세요:
+If you discover a security vulnerability, please follow these procedures:
 
-### 신고 방법
-1. **이메일**: security@riderhub.dev (가상 이메일)
-2. **GitHub Security Advisory**: 이 저장소의 Security 탭에서 "Report a vulnerability" 클릭
+### How to Report
+1. **Email**: security@riderhub.dev (virtual email)
+2. **GitHub Security Advisory**: Click "Report a vulnerability" in the Security tab of this repository
 
-### 신고 시 포함할 정보
-- 취약점의 상세한 설명
-- 재현 단계
-- 잠재적 영향
-- 제안하는 해결 방법 (있는 경우)
+### Information to Include in Report
+- Detailed description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Suggested solution (if available)
 
-## 🔒 보안 모범 사례
+## 🔒 Security Best Practices
 
-### AWS 자격 증명 관리
-- IAM 사용자에게 최소 권한 원칙 적용
-- 액세스 키를 90일마다 로테이션
-- MFA(Multi-Factor Authentication) 활성화
+### AWS Credentials Management
+- Apply principle of least privilege to IAM users
+- Rotate access keys every 90 days
+- Enable MFA (Multi-Factor Authentication)
 
-### GitHub Secrets 관리
-- 민감한 정보는 절대 코드에 하드코딩하지 않음
-- GitHub Secrets를 통해서만 민감한 정보 관리
-- 정기적인 시크릿 로테이션
+### GitHub Secrets Management
+- Never hardcode sensitive information in code
+- Manage sensitive information only through GitHub Secrets
+- Regular secret rotation
 
-### 코드 보안
-- 의존성 취약점 정기 검사
-- 코드 스캔 자동화
-- 보안 헤더 설정
+### Code Security
+- Regular dependency vulnerability scanning
+- Automated code scanning
+- Security headers configuration
 
-## 🚨 알려진 취약점
+## 🚨 Known Vulnerabilities
 
-현재 알려진 보안 취약점은 없습니다.
+Currently, there are no known security vulnerabilities.
 
-## 📋 보안 체크리스트
+## 📋 Security Checklist
 
-### 배포 전 확인사항
-- [ ] 모든 의존성이 최신 버전인지 확인
-- [ ] AWS IAM 권한이 최소한으로 설정되었는지 확인
-- [ ] 민감한 정보가 코드에 하드코딩되지 않았는지 확인
-- [ ] HTTPS가 모든 엔드포인트에서 사용되는지 확인
-- [ ] 입력 데이터 검증이 적절히 구현되었는지 확인
+### Pre-deployment Checklist
+- [ ] Verify all dependencies are up to date
+- [ ] Confirm AWS IAM permissions are set to minimum required
+- [ ] Ensure no sensitive information is hardcoded in code
+- [ ] Verify HTTPS is used for all endpoints
+- [ ] Confirm input data validation is properly implemented
 
-### 정기 점검사항
-- [ ] AWS 액세스 키 로테이션 (90일마다)
-- [ ] GitHub Secrets 로테이션 (90일마다)
-- [ ] 의존성 취약점 스캔 (월 1회)
-- [ ] 보안 로그 검토 (주 1회)
+### Regular Maintenance
+- [ ] AWS access key rotation (every 90 days)
+- [ ] GitHub Secrets rotation (every 90 days)
+- [ ] Dependency vulnerability scanning (monthly)
+- [ ] Security log review (weekly)
 
-## 🔍 보안 도구
+## 🔍 Security Tools
 
-### 자동화된 보안 검사
-- GitHub Dependabot: 의존성 취약점 자동 검사
-- CodeQL: 코드 보안 분석
-- AWS Security Hub: AWS 리소스 보안 모니터링
+### Automated Security Scanning
+- GitHub Dependabot: Automatic dependency vulnerability scanning
+- CodeQL: Code security analysis
+- AWS Security Hub: AWS resource security monitoring
 
-### 수동 보안 검사
+### Manual Security Scanning
 ```bash
-# 의존성 취약점 검사
+# Dependency vulnerability scanning
 npm audit
 composer audit
 
-# AWS 보안 상태 확인
+# AWS security status check
 aws securityhub get-findings --max-items 10
 ```
 
-## 📞 연락처
+## 📞 Contact
 
-보안 관련 문의사항이 있으시면 언제든지 연락주세요.
+If you have any security-related questions, please contact us anytime.
 
 ---
 
-**중요**: 이 프로젝트는 교육 및 포트폴리오 목적으로 제작되었습니다. 프로덕션 환경에서 사용하기 전에 추가적인 보안 검토가 필요합니다.
+**Important**: This project was created for educational and portfolio purposes. Additional security review is required before using in production environments.

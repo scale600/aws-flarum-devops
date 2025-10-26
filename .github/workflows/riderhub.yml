@@ -121,11 +121,11 @@ jobs:
           # Check if Amplify app exists and get deployment status
           echo "Checking Amplify app status..."
           aws amplify get-app --app-id ${{ secrets.AMPLIFY_APP_ID }} || echo "Amplify app not found or not accessible"
-          
+
           # List branches to see current status
           echo "Listing Amplify branches..."
           aws amplify list-branches --app-id ${{ secrets.AMPLIFY_APP_ID }} || echo "No branches found"
-          
+
           # Since the app is connected to a repository, we'll just trigger a build
           # by pushing to the connected branch (this happens automatically via GitHub)
           echo "Amplify app is connected to repository. Deployment will be triggered automatically via GitHub webhook."
