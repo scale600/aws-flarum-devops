@@ -17,8 +17,9 @@ resource "aws_dynamodb_table" "posts" {
   }
   
   global_secondary_index {
-    name     = "userId-index"
-    hash_key = "userId"
+    name               = "userId-index"
+    hash_key           = "userId"
+    projection_type    = "ALL"
   }
   
   tags = {
@@ -42,8 +43,9 @@ resource "aws_dynamodb_table" "comments" {
   }
   
   global_secondary_index {
-    name     = "postId-index"
-    hash_key = "postId"
+    name               = "postId-index"
+    hash_key           = "postId"
+    projection_type    = "ALL"
   }
   
   tags = {
