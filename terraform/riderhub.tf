@@ -224,13 +224,18 @@ resource "aws_lambda_permission" "api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.riderhub.execution_arn}/*/*"
 }
 
+resource "aws_api_gateway_stage" "riderhub" {
+  deployment_id = aws_api_gateway_deployment.riderhub.id
+  rest_api_id   = aws_api_gateway_rest_api.riderhub.id
+  stage_name    = var.environment
+}
+
 resource "aws_api_gateway_deployment" "riderhub" {
   depends_on = [
     aws_api_gateway_integration.posts
   ]
   
   rest_api_id = aws_api_gateway_rest_api.riderhub.id
-  stage_name  = var.environment
 }
 
 # SNS Topic for Notifications
@@ -245,7 +250,7 @@ resource "aws_sns_topic" "notifications" {
 # Outputs
 output "api_gateway_url" {
   description = "API Gateway URL"
-  value       = aws_api_gateway_deployment.riderhub.invoke_url
+  value       = aws_api_gateway_stage.riderhub.invoke_url
 }
 
 output "ecr_repository_url" {
