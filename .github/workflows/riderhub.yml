@@ -58,6 +58,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Run Terraform Apply (Infrastructure First)
+        run: |
+          cd terraform
+          terraform init
+          terraform plan
+          terraform apply -auto-approve
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -70,7 +77,7 @@ jobs:
         run: |
           # Copy Flarum application to docker context
           cp -r src/riderhub/* docker/riderhub/
-          
+
           # Build a docker container and push it to ECR
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./docker/riderhub
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -94,12 +101,10 @@ jobs:
             --app-id ${{ secrets.AMPLIFY_APP_ID }} \
             --branch-name main
 
-      - name: Run Terraform Apply
+      - name: Update Terraform State
         run: |
           cd terraform
-          terraform init
-          terraform plan
-          terraform apply -auto-approve
+          terraform refresh
 
       - name: Run Ansible Configuration
         run: |
