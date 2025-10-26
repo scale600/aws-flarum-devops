@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Community Support
+    url: https://github.community/
+    about: Please ask and answer questions here.
+  - name: AWS Support
+    url: https://aws.amazon.com/support/
+    about: AWS 관련 기술 지원을 받으세요.
