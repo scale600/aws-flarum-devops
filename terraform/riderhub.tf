@@ -1,6 +1,10 @@
+# =============================================================================
 # RiderHub Infrastructure Configuration
+# =============================================================================
 
+# =============================================================================
 # DynamoDB Tables
+# =============================================================================
 resource "aws_dynamodb_table" "posts" {
   name           = "${var.project_name}-posts"
   billing_mode   = "PAY_PER_REQUEST"
@@ -23,7 +27,9 @@ resource "aws_dynamodb_table" "posts" {
   }
   
   tags = {
-    Name = "${var.project_name}-posts"
+    Name        = "${var.project_name}-posts"
+    Service     = "DynamoDB"
+    TableType   = "Posts"
   }
 }
 
@@ -49,7 +55,9 @@ resource "aws_dynamodb_table" "comments" {
   }
   
   tags = {
-    Name = "${var.project_name}-comments"
+    Name        = "${var.project_name}-comments"
+    Service     = "DynamoDB"
+    TableType   = "Comments"
   }
 }
 
