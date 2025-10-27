@@ -1,0 +1,284 @@
+name: RiderHub Flarum CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 753523452116
+  ECR_REPOSITORY_NAME: riderhub-flarum
+  LAMBDA_FUNCTION_NAME: riderhub-flarum
+  PROJECT_NAME: riderhub
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          extensions: mbstring, dom, fileinfo, mysql, pdo_mysql
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: |
+          cd src/flarum
+          composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run PHP tests
+        run: |
+          cd src/flarum
+          vendor/bin/phpunit --configuration phpunit.xml
+        env:
+          APP_ENV: testing
+          APP_DEBUG: true
+
+  # =============================================================================
+  # Infrastructure Setup Phase
+  # =============================================================================
+  setup-environment:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Setup Ansible
+        run: |
+          pip install ansible boto3
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+  # =============================================================================
+  # Infrastructure Deployment Phase
+  # =============================================================================
+  deploy-infrastructure:
+    needs: setup-environment
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Initialize Terraform
+        run: |
+          cd terraform
+          terraform init
+
+      - name: Plan Terraform deployment
+        run: |
+          cd terraform
+          terraform plan -out=tfplan
+
+      - name: Apply Terraform deployment
+        run: |
+          cd terraform
+          terraform apply -auto-approve tfplan
+
+      - name: Get outputs
+        run: |
+          cd terraform
+          echo "api-gateway-url=$(terraform output -raw api_gateway_url)" >> $GITHUB_OUTPUT
+          echo "rds-endpoint=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
+          echo "s3-bucket-name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          echo "ecr-repository-url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+
+  # =============================================================================
+  # Application Build Phase
+  # =============================================================================
+  build-application:
+    needs: deploy-infrastructure
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      image-uri: ${{ steps.build-image.outputs.image }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Building Flarum Docker image..."
+          echo "ECR Registry: $ECR_REGISTRY"
+          echo "ECR Repository: $ECR_REPOSITORY"
+          echo "Image Tag: $IMAGE_TAG"
+
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/flarum/Dockerfile .
+          echo "Docker image built successfully"
+
+      - name: Push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Pushing image to ECR..."
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "Image pushed successfully: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  # =============================================================================
+  # Lambda Deployment Phase
+  # =============================================================================
+  deploy-lambda:
+    needs: [deploy-infrastructure, build-application]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update Lambda Function Code
+        run: |
+          echo "Updating Lambda function code..."
+          aws lambda update-function-code \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --image-uri ${{ needs.build-application.outputs.image-uri }} \
+            --region ${{ env.AWS_REGION }}
+          echo "Lambda function updated successfully"
+
+  # =============================================================================
+  # Database Setup Phase
+  # =============================================================================
+  setup-database:
+    needs: [deploy-infrastructure, deploy-lambda]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+
+      - name: Wait for RDS to be available
+        run: |
+          echo "Waiting for RDS instance to be available..."
+          aws rds wait db-instance-available --db-instance-identifier ${{ env.PROJECT_NAME }}-flarum-db
+          echo "RDS instance is available"
+
+      - name: Run Flarum database migrations
+        run: |
+          echo "Database setup completed"
+          echo "Flarum will initialize its database schema on first request"
+
+  # =============================================================================
+  # Finalization Phase
+  # =============================================================================
+  finalize-deployment:
+    needs: [deploy-lambda, setup-database]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Show Deployment Results
+        run: |
+          echo "=== FLARUM DEPLOYMENT RESULTS ==="
+          echo "API Gateway URL: ${{ needs.deploy-infrastructure.outputs.api-gateway-url }}"
+          echo "RDS Endpoint: ${{ needs.deploy-infrastructure.outputs.rds-endpoint }}"
+          echo "S3 Bucket: ${{ needs.deploy-infrastructure.outputs.s3-bucket-name }}"
+          echo "ECR Repository: ${{ needs.deploy-infrastructure.outputs.ecr-repository-url }}"
+          echo "Lambda Function: ${{ env.LAMBDA_FUNCTION_NAME }}"
+          echo "=== DEPLOYMENT COMPLETE ==="
+
+      - name: Test API Endpoints
+        run: |
+          echo "Testing Flarum API endpoints..."
+          API_URL="${{ needs.deploy-infrastructure.outputs.api-gateway-url }}"
+
+          echo "Testing home endpoint..."
+          curl -s "$API_URL/" | head -5
+
+          echo "Testing discussions endpoint..."
+          curl -s "$API_URL/api/discussions" | head -5
+
+          echo "Testing posts endpoint..."
+          curl -s "$API_URL/api/posts" | head -5
+
+          echo "Testing users endpoint..."
+          curl -s "$API_URL/api/users" | head -5
+

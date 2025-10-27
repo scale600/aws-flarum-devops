@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1"
+    }
   }
 }
 
@@ -54,4 +58,18 @@ variable "image_tag" {
   description = "Docker image tag for Lambda function"
   type        = string
   default     = "latest"
+}
+
+# =============================================================================
+# Random Resources
+# =============================================================================
+resource "random_password" "db_password" {
+  length  = 16
+  special = true
+}
+
+resource "random_string" "s3_suffix" {
+  length  = 8
+  special = false
+  upper   = false
 }

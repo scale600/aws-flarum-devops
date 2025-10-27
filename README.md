@@ -1,6 +1,6 @@
 # aws-flarum-devops-serverless
 
-Uses Terraform for infrastructure as code to provision Lambda (PHP/Bref), DynamoDB (posts/comments), S3 (media), API Gateway (REST APIs), Amplify (React UI), and SNS (notifications); Ansible for Flarum PHP configuration; Docker for containerized Lambda deployments; and GitHub Actions for CI/CD pipelines.
+Uses Terraform for infrastructure as code to provision Lambda (PHP/Bref), RDS MySQL (database), S3 (media), API Gateway (REST APIs), and ECR (container registry); Ansible for Flarum PHP configuration; Docker for containerized Lambda deployments; and GitHub Actions for CI/CD pipelines.
 
 ## Project Overview
 
@@ -13,20 +13,20 @@ aws-flarum-devops is a hands-on DevOps project that deploys RiderHub, a serverle
 **Serverless Architecture**: Utilizes AWS Free Tier services:
 
 - **Lambda**: Runs Flarum backend (PHP 8.1 with Bref) for CRUD operations (~10K daily requests within 1M/month limit).
-- **DynamoDB**: Stores posts/comments (Posts: postId, title, content, userId, timestamp; Comments: commentId, postId) (~1GB for 500 users within 25GB limit).
-- **S3**: Hosts media uploads (riderhub-media bucket, ~2GB within 5GB limit).
-- **API Gateway**: Exposes REST APIs (/api/posts, /api/comments, ~10K daily calls within 1M/month limit).
-- **Amplify**: Hosts React-based Flarum UI with motorcycle-themed customization (free hosting).
-- **SNS**: Sends email/SMS notifications for new posts/comments (~1K daily within 1M/month limit).
+- **RDS MySQL**: Stores forum data (discussions, posts, users, settings) with 20GB storage within Free Tier limits.
+- **S3**: Hosts media uploads and file storage (~2GB within 5GB limit).
+- **API Gateway**: Exposes REST APIs (/api/discussions, /api/posts, /api/users, ~10K daily calls within 1M/month limit).
+- **ECR**: Container registry for Flarum Docker images (500MB within 500MB limit).
+- **VPC**: Secure networking with public/private subnets for Lambda and RDS.
 
 **DevOps Automation**:
 
-- **Terraform**: Provisions AWS infrastructure (DynamoDB, S3, Lambda, API Gateway, Amplify, SNS) using HCL for reproducible deployments.
-- **Ansible**: Automates Flarum PHP configuration (Composer dependencies, DynamoDB adapter).
+- **Terraform**: Provisions AWS infrastructure (RDS MySQL, S3, Lambda, API Gateway, ECR, VPC) using HCL for reproducible deployments.
+- **Ansible**: Automates Flarum PHP configuration (Composer dependencies, MySQL adapter).
 - **Docker**: Packages Flarum as a Lambda-compatible container using Bref PHP runtime for consistent local testing and production deployment.
-- **GitHub Actions**: Automates CI/CD pipelines for building, testing, and deploying Flarum code to Lambda and Amplify.
+- **GitHub Actions**: Automates CI/CD pipelines for building, testing, and deploying Flarum code to Lambda and ECR.
 
-**Blogspot Integration**: Embeds Amplify-hosted UI links in RiderWin.com Blogspot (e.g., <a href="https://riderhub.amplifyapp.com">Join RiderHub Forum</a>) to drive user engagement.
+**API Integration**: Provides RESTful API endpoints for forum functionality that can be integrated with any frontend application or embedded in RiderWin.com Blogspot.
 
 **Zero-Cost Deployment**: Operates entirely within AWS Free Tier, making it ideal for DevOps learning and portfolio projects without financial barriers.
 
@@ -42,17 +42,17 @@ aws-flarum-devops is a hands-on DevOps project that deploys RiderHub, a serverle
 ```
 aws-flarum-devops/
 ├── terraform/
-│   ├── riderhub.tf # RiderHub infrastructure (DynamoDB, S3, Lambda, etc.)
+│   ├── flarum.tf # Flarum infrastructure (RDS MySQL, S3, Lambda, API Gateway, ECR, VPC)
 │   └── main.tf # AWS provider config
 ├── ansible/
-│   ├── riderhub.yml # Flarum PHP and DynamoDB adapter setup
+│   ├── riderhub.yml # Flarum PHP and MySQL adapter setup
 │   └── roles/ # Reusable Ansible roles
 ├── docker/
-│   └── riderhub/Dockerfile # Flarum container (PHP/Bref)
+│   └── flarum/Dockerfile # Flarum container (PHP/Bref)
 ├── src/
-│   └── riderhub/ # Flarum code (customized for DynamoDB)
+│   └── flarum/ # Flarum OSS application code
 ├── .github/workflows/
-│   └── riderhub.yml # CI/CD pipeline for RiderHub
+│   └── flarum.yml # CI/CD pipeline for Flarum
 ├── README.md # Project overview and setup instructions
 └── LICENSE # MIT License
 ```
@@ -86,23 +86,23 @@ ansible-playbook ansible/riderhub.yml
 
 ```bash
 # Build Flarum image
-docker build -t riderhub ./docker/riderhub
+docker build -t flarum ./docker/flarum
 # Push to AWS ECR
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/riderhub:latest
+docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/riderhub-flarum:latest
 ```
 
 ### GitHub Actions CI/CD:
 
-1. Configure secrets (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AMPLIFY_APP_ID) in GitHub.
-2. Push changes to trigger riderhub.yml workflow for Lambda/Amplify deployment.
+1. Configure secrets (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) in GitHub.
+2. Push changes to trigger flarum.yml workflow for Lambda/ECR deployment.
 
-### Blogspot Integration:
+### API Integration:
 
-Add forum link to RiderWin.com Blogspot (e.g., `<a href="https://riderhub.amplifyapp.com">Join Forum</a>`).
+Use the API Gateway URL to integrate forum functionality with any frontend application or embed in RiderWin.com Blogspot.
 
 ### Test:
 
-Verify forum functionality (posts, comments, media uploads, notifications) and AWS Free Tier limits.
+Verify forum functionality (discussions, posts, users, media uploads) and AWS Free Tier limits.
 
 ## Prerequisites
 
