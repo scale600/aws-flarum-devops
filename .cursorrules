@@ -1,0 +1,49 @@
+# RiderHub Project Cursor Rules
+
+## Project Context
+
+This is a serverless Flarum-based motorcycle community forum project using AWS services.
+
+## Technology Stack
+
+- Backend: PHP 8.1 + Flarum + Bref (Lambda)
+- Infrastructure: Terraform + Ansible + Docker
+- Frontend: React + Amplify
+- Database: DynamoDB
+- Storage: S3
+- CI/CD: GitHub Actions
+
+## Coding Standards
+
+- Follow PSR-4 autoloading standards
+- Use meaningful variable and function names
+- Add comprehensive comments for complex logic
+- Follow Flarum extension development best practices
+
+## File Structure
+
+- `src/riderhub/` - Flarum application code
+- `terraform/` - Infrastructure as Code
+- `ansible/` - Configuration management
+- `docker/` - Containerization
+- `.github/workflows/` - CI/CD pipelines
+
+## AWS Best Practices
+
+- Use least privilege IAM policies
+- Implement proper error handling
+- Follow serverless architecture patterns
+- Optimize for AWS Free Tier limits
+
+## Security Guidelines
+
+- Never commit AWS credentials
+- Use environment variables for sensitive data
+- Implement proper input validation
+- Follow OWASP security guidelines
+
+## Documentation
+
+- Update README.md for significant changes
+- Document API endpoints and configurations
+- Maintain aws-resources.md for resource tracking

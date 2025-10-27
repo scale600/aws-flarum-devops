@@ -9,22 +9,22 @@ This document provides specific setup instructions tailored for this AWS account
 
 ### **Required Secrets**
 
-| Secret Name             | Value        | Description                      |
-| ----------------------- | ------------ | -------------------------------- |
-| `AWS_ACCESS_KEY_ID`     | `AKIA...`    | IAM user's access key ID         |
-| `AWS_SECRET_ACCESS_KEY` | `wJalr...`   | IAM user's secret access key     |
-| `AMPLIFY_APP_ID`        | `d...`       | Amplify app ID                   |
+| Secret Name             | Value      | Description                  |
+| ----------------------- | ---------- | ---------------------------- |
+| `AWS_ACCESS_KEY_ID`     | `AKIA...`  | IAM user's access key ID     |
+| `AWS_SECRET_ACCESS_KEY` | `wJalr...` | IAM user's secret access key |
+| `AMPLIFY_APP_ID`        | `d...`     | Amplify app ID               |
 
 ### **Additional Recommended Secrets**
 
-| Secret Name               | Value                      | Description                |
-| ------------------------- | -------------------------- | -------------------------- |
-| `AWS_REGION`              | `us-east-1`                | AWS region                 |
-| `ECR_REPOSITORY`          | `riderhub`                 | ECR repository name        |
-| `LAMBDA_FUNCTION_NAME`    | `riderhub-api`             | Lambda function name       |
-| `DYNAMODB_POSTS_TABLE`    | `riderhub-posts`           | DynamoDB posts table       |
-| `DYNAMODB_COMMENTS_TABLE` | `riderhub-comments`        | DynamoDB comments table    |
-| `S3_MEDIA_BUCKET`         | `riderhub-media-xxxxxxxx`  | S3 media bucket            |
+| Secret Name               | Value                     | Description             |
+| ------------------------- | ------------------------- | ----------------------- |
+| `AWS_REGION`              | `us-east-1`               | AWS region              |
+| `ECR_REPOSITORY`          | `riderhub`                | ECR repository name     |
+| `LAMBDA_FUNCTION_NAME`    | `riderhub-api`            | Lambda function name    |
+| `DYNAMODB_POSTS_TABLE`    | `riderhub-posts`          | DynamoDB posts table    |
+| `DYNAMODB_COMMENTS_TABLE` | `riderhub-comments`       | DynamoDB comments table |
+| `S3_MEDIA_BUCKET`         | `riderhub-media-xxxxxxxx` | S3 media bucket         |
 
 ## 🏗️ AWS Resource ARN Information
 
@@ -68,6 +68,7 @@ Notifications Topic ARN: arn:aws:sns:us-east-1:753523452116:riderhub-notificatio
 ## 🔧 Quick Setup Commands
 
 ### 1. Verify AWS Account
+
 ```bash
 # Check current AWS account
 aws sts get-caller-identity
@@ -81,6 +82,7 @@ aws sts get-caller-identity
 ```
 
 ### 2. Create IAM User for CI/CD
+
 ```bash
 # Create IAM user
 aws iam create-user --user-name riderhub-ci-cd
@@ -112,6 +114,7 @@ aws iam create-access-key --user-name riderhub-ci-cd
 ```
 
 ### 3. Create ECR Repository
+
 ```bash
 # Create ECR repository
 aws ecr create-repository --repository-name riderhub --region us-east-1
@@ -121,6 +124,7 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 ```
 
 ### 4. Create DynamoDB Tables
+
 ```bash
 # Create posts table
 aws dynamodb create-table \
@@ -150,6 +154,7 @@ aws dynamodb create-table \
 ```
 
 ### 5. Create S3 Bucket
+
 ```bash
 # Create S3 bucket with unique suffix
 BUCKET_NAME="riderhub-media-$(openssl rand -hex 4)"
@@ -167,6 +172,7 @@ aws s3api put-public-access-block \
 ## 🌐 AWS Console Direct Links
 
 ### **Main Services**
+
 - [AWS Console Home](https://console.aws.amazon.com/)
 - [IAM Console](https://console.aws.amazon.com/iam/)
 - [ECR Console](https://console.aws.amazon.com/ecr/)
@@ -178,6 +184,7 @@ aws s3api put-public-access-block \
 - [SNS Console](https://console.aws.amazon.com/sns/)
 
 ### **Account-Specific Links**
+
 - [Account 753523452116 IAM Users](https://console.aws.amazon.com/iam/home#/users)
 - [Account 753523452116 ECR Repositories](https://console.aws.amazon.com/ecr/repositories?region=us-east-1)
 - [Account 753523452116 Lambda Functions](https://console.aws.amazon.com/lambda/home?region=us-east-1#/functions)
@@ -187,6 +194,7 @@ aws s3api put-public-access-block \
 ## 🔍 Resource Verification
 
 ### Check All Resources
+
 ```bash
 # List all ECR repositories
 aws ecr describe-repositories --region us-east-1
@@ -211,6 +219,7 @@ aws sns list-topics --region us-east-1
 ```
 
 ### Check Resource Status
+
 ```bash
 # Check DynamoDB table status
 aws dynamodb describe-table --table-name riderhub-posts --region us-east-1 --query 'Table.TableStatus'
@@ -226,6 +235,7 @@ aws s3api head-bucket --bucket riderhub-media-xxxxxxxx
 ## 🚀 Deployment Commands
 
 ### Terraform Deployment
+
 ```bash
 # Navigate to terraform directory
 cd terraform
@@ -244,6 +254,7 @@ terraform output
 ```
 
 ### Ansible Configuration
+
 ```bash
 # Run Ansible playbook
 ansible-playbook ansible/riderhub.yml \
@@ -257,6 +268,7 @@ ansible-playbook ansible/riderhub.yml \
 ```
 
 ### Docker Build and Push
+
 ```bash
 # Build Docker image
 docker build -t riderhub ./docker/riderhub
@@ -273,6 +285,7 @@ docker push 753523452116.dkr.ecr.us-east-1.amazonaws.com/riderhub:latest
 ### Common Issues
 
 #### Resource Already Exists
+
 ```bash
 # If resources already exist, you can either:
 # 1. Import existing resources to Terraform state
@@ -283,6 +296,7 @@ aws dynamodb delete-table --table-name riderhub-posts --region us-east-1
 ```
 
 #### Permission Denied
+
 ```bash
 # Check IAM user permissions
 aws iam list-attached-user-policies --user-name riderhub-ci-cd
@@ -292,6 +306,7 @@ aws iam list-user-policies --user-name riderhub-ci-cd
 ```
 
 #### Region Mismatch
+
 ```bash
 # Ensure all commands use us-east-1 region
 export AWS_DEFAULT_REGION=us-east-1
@@ -302,12 +317,14 @@ export AWS_DEFAULT_REGION=us-east-1
 ## 📊 Cost Monitoring
 
 ### Check Free Tier Usage
+
 1. Go to [AWS Billing Console](https://console.aws.amazon.com/billing/)
 2. Click "Free Tier" in the left menu
 3. Monitor usage for each service
 4. Set up billing alerts if needed
 
 ### Expected Monthly Costs
+
 - **Lambda**: $0 (within Free Tier limits)
 - **DynamoDB**: $0 (within Free Tier limits)
 - **S3**: $0 (within Free Tier limits)
@@ -325,6 +342,7 @@ export AWS_DEFAULT_REGION=us-east-1
 ## 🆘 Support
 
 If you encounter issues specific to this AWS account:
+
 1. Check the troubleshooting section above
 2. Review AWS CloudTrail logs
 3. Check GitHub Actions logs
