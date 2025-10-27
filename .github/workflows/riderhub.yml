@@ -86,7 +86,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
   # =============================================================================
-  # Infrastructure Deployment Phase
+  # Infrastructure Discovery Phase
   # =============================================================================
   deploy-infrastructure:
     needs: setup-environment
@@ -109,51 +109,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.0
-
-      - name: Initialize Terraform
-        run: |
-          cd terraform
-          echo "Initializing Terraform..."
-          terraform init
-          echo "Terraform initialized successfully"
-
-      - name: Import Existing Resources
-        run: |
-          cd terraform
-          echo "Importing existing AWS resources into Terraform state..."
-          terraform import aws_ecr_repository.riderhub riderhub || echo "ECR repository already imported"
-          terraform import aws_dynamodb_table.posts riderhub-posts || echo "DynamoDB posts table already imported"
-          terraform import aws_dynamodb_table.comments riderhub-comments || echo "DynamoDB comments table already imported"
-          terraform import aws_s3_bucket.media riderhub-media-tvducv90 || echo "S3 bucket already imported"
-          terraform import aws_lambda_function.riderhub riderhub-api || echo "Lambda function already imported"
-          terraform import aws_iam_role.lambda_role riderhub-lambda-role || echo "IAM role already imported"
-          echo "Resource import completed"
-
       - name: Get ECR Repository URL
         id: ecr-output
         run: |
-          cd terraform
           echo "Getting ECR repository URL..."
-          echo "repository-url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+          echo "repository-url=753523452116.dkr.ecr.us-east-1.amazonaws.com/riderhub" >> $GITHUB_OUTPUT
 
       - name: Get DynamoDB Tables
         id: dynamodb-output
         run: |
-          cd terraform
           echo "Getting DynamoDB table names..."
-          echo "posts-table=$(terraform output -raw dynamodb_posts_table)" >> $GITHUB_OUTPUT
-          echo "comments-table=$(terraform output -raw dynamodb_comments_table)" >> $GITHUB_OUTPUT
+          echo "posts-table=riderhub-posts" >> $GITHUB_OUTPUT
+          echo "comments-table=riderhub-comments" >> $GITHUB_OUTPUT
 
       - name: Get S3 Bucket
         id: s3-output
         run: |
-          cd terraform
           echo "Getting S3 bucket name..."
-          echo "bucket-name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          echo "bucket-name=riderhub-media-tvducv90" >> $GITHUB_OUTPUT
 
   # =============================================================================
   # Application Build Phase
@@ -230,26 +203,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.0
-
-      - name: Initialize Terraform
+      - name: Create Lambda ZIP Package
         run: |
-          cd terraform
-          echo "Initializing Terraform for Lambda deployment..."
-          terraform init
-          echo "Terraform initialized successfully"
+          echo "Creating Lambda ZIP package..."
+          zip index.js.zip index.js
+          echo "ZIP package created successfully"
 
-      - name: Create Lambda Function
+      - name: Update Lambda Function Code
         id: lambda-output
         run: |
-          cd terraform
-          echo "Creating Lambda function with image tag: ${{ github.sha }}"
-          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_lambda_function.riderhub
-          echo "Lambda function created successfully"
-          echo "function-name=$(terraform output -raw lambda_function_name)" >> $GITHUB_OUTPUT
+          echo "Updating Lambda function code..."
+          aws lambda update-function-code \
+            --function-name riderhub-api \
+            --zip-file fileb://index.js.zip \
+            --region us-east-1
+          echo "Lambda function updated successfully"
+          echo "function-name=riderhub-api" >> $GITHUB_OUTPUT
 
   # =============================================================================
   # API Gateway Deployment Phase
@@ -272,40 +241,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.0
-
-      - name: Initialize Terraform
-        run: |
-          cd terraform
-          echo "Initializing Terraform for API Gateway deployment..."
-          terraform init
-          echo "Terraform initialized successfully"
-
-      - name: Create API Gateway Resources
-        run: |
-          cd terraform
-          echo "Creating API Gateway resources..."
-          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_rest_api.riderhub -target=aws_api_gateway_resource.posts -target=aws_api_gateway_method.posts
-          echo "API Gateway resources created successfully"
-
-      - name: Create API Gateway Integration
-        run: |
-          cd terraform
-          echo "Creating API Gateway integration..."
-          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_integration.posts -target=aws_lambda_permission.api_gateway
-          echo "API Gateway integration created successfully"
-
-      - name: Deploy API Gateway
+      - name: Get API Gateway URL
         id: api-output
         run: |
-          cd terraform
-          echo "Deploying API Gateway..."
-          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_deployment.riderhub -target=aws_api_gateway_stage.riderhub
-          echo "API Gateway deployed successfully"
-          echo "gateway-url=$(terraform output -raw api_gateway_url)" >> $GITHUB_OUTPUT
+          echo "Getting API Gateway URL..."
+          echo "gateway-url=https://99hfk9nt19.execute-api.us-east-1.amazonaws.com/production" >> $GITHUB_OUTPUT
 
   # =============================================================================
   # Frontend Deployment Phase
