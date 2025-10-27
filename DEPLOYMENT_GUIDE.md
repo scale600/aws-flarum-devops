@@ -197,3 +197,4 @@ For issues or questions:
 ---
 
 **Happy Deploying! 🏍️**
+# Deployment triggered with AWS credentials configured
