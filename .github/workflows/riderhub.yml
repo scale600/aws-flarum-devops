@@ -121,47 +121,39 @@ jobs:
           terraform init
           echo "Terraform initialized successfully"
 
-      - name: Create ECR Repository
+      - name: Import Existing Resources
+        run: |
+          cd terraform
+          echo "Importing existing AWS resources into Terraform state..."
+          terraform import aws_ecr_repository.riderhub riderhub || echo "ECR repository already imported"
+          terraform import aws_dynamodb_table.posts riderhub-posts || echo "DynamoDB posts table already imported"
+          terraform import aws_dynamodb_table.comments riderhub-comments || echo "DynamoDB comments table already imported"
+          terraform import aws_s3_bucket.media riderhub-media-tvducv90 || echo "S3 bucket already imported"
+          terraform import aws_lambda_function.riderhub riderhub-api || echo "Lambda function already imported"
+          terraform import aws_iam_role.lambda_role riderhub-lambda-role || echo "IAM role already imported"
+          echo "Resource import completed"
+
+      - name: Get ECR Repository URL
         id: ecr-output
         run: |
           cd terraform
-          echo "Creating ECR repository..."
-          terraform apply -auto-approve -target=aws_ecr_repository.riderhub
-          echo "ECR repository created successfully"
+          echo "Getting ECR repository URL..."
           echo "repository-url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
 
-      - name: Create DynamoDB Tables
+      - name: Get DynamoDB Tables
         id: dynamodb-output
         run: |
           cd terraform
-          echo "Creating DynamoDB tables..."
-          terraform apply -auto-approve -target=aws_dynamodb_table.posts -target=aws_dynamodb_table.comments
-          echo "DynamoDB tables created successfully"
+          echo "Getting DynamoDB table names..."
           echo "posts-table=$(terraform output -raw dynamodb_posts_table)" >> $GITHUB_OUTPUT
           echo "comments-table=$(terraform output -raw dynamodb_comments_table)" >> $GITHUB_OUTPUT
 
-      - name: Create S3 Bucket
+      - name: Get S3 Bucket
         id: s3-output
         run: |
           cd terraform
-          echo "Creating S3 bucket..."
-          terraform apply -auto-approve -target=aws_s3_bucket.media -target=aws_s3_bucket_public_access_block.media -target=aws_s3_bucket_versioning.media -target=random_string.bucket_suffix
-          echo "S3 bucket created successfully"
+          echo "Getting S3 bucket name..."
           echo "bucket-name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
-
-      - name: Create IAM Role and Policy
-        run: |
-          cd terraform
-          echo "Creating IAM role and policy..."
-          terraform apply -auto-approve -target=aws_iam_role.lambda_role -target=aws_iam_role_policy.lambda_policy
-          echo "IAM role and policy created successfully"
-
-      - name: Create SNS Topic
-        run: |
-          cd terraform
-          echo "Creating SNS topic..."
-          terraform apply -auto-approve -target=aws_sns_topic.notifications
-          echo "SNS topic created successfully"
 
   # =============================================================================
   # Application Build Phase
