@@ -202,7 +202,7 @@ jobs:
           echo "ECR Registry: $ECR_REGISTRY"
           echo "ECR Repository: $ECR_REPOSITORY"
           echo "Image Tag: $IMAGE_TAG"
-          
+
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/riderhub/Dockerfile .
           echo "Docker image built successfully"
 

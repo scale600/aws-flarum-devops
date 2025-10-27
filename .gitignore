@@ -1,5 +1,23 @@
 .DS_Store
 *.DS_Store
+
+# Terraform
 terraform/.terraform/
 terraform/terraform.tfstate*
 terraform/response.json
+terraform/.terraform.lock.hcl
+
+# Temporary files
+*.zip
+*.log
+response.json
+function.zip
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
