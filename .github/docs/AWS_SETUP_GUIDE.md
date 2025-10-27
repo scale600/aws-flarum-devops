@@ -13,10 +13,12 @@ This document explains how to set up the AWS environment for the RiderHub projec
 ## 🏗️ AWS Account Setup
 
 ### 1. Create AWS Account
+
 - Create an [AWS Free Tier](https://aws.amazon.com/free/) account
 - Complete email verification and payment information (no charges for Free Tier usage)
 
 ### 2. Verify AWS Free Tier Limits
+
 - EC2: 750 hours/month (t2.micro instances)
 - Lambda: 1M requests/month, 400,000 GB-seconds
 - DynamoDB: 25GB storage, 25 read/write capacity units
@@ -27,6 +29,7 @@ This document explains how to set up the AWS environment for the RiderHub projec
 ## 💻 AWS CLI Installation and Configuration
 
 ### macOS
+
 ```bash
 # Install using Homebrew
 brew install awscli
@@ -36,6 +39,7 @@ pip3 install awscli
 ```
 
 ### Linux
+
 ```bash
 # Ubuntu/Debian
 sudo apt update
@@ -46,6 +50,7 @@ sudo yum install awscli
 ```
 
 ### Windows
+
 ```powershell
 # Using Chocolatey
 choco install awscli
@@ -55,6 +60,7 @@ choco install awscli
 ```
 
 ### AWS CLI Configuration
+
 ```bash
 # Configure AWS CLI
 aws configure
@@ -67,6 +73,7 @@ aws configure
 ```
 
 ### Verify AWS CLI Setup
+
 ```bash
 # Test AWS CLI connection
 aws sts get-caller-identity
@@ -84,6 +91,7 @@ aws sts get-caller-identity
 ### Installation
 
 #### macOS
+
 ```bash
 # Using Homebrew
 brew install terraform
@@ -95,6 +103,7 @@ sudo mv terraform /usr/local/bin/
 ```
 
 #### Linux
+
 ```bash
 # Download and install
 wget https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
@@ -103,6 +112,7 @@ sudo mv terraform /usr/local/bin/
 ```
 
 #### Windows
+
 ```powershell
 # Using Chocolatey
 choco install terraform
@@ -112,6 +122,7 @@ choco install terraform
 ```
 
 ### Verify Terraform Installation
+
 ```bash
 # Check Terraform version
 terraform version
@@ -126,6 +137,7 @@ terraform version
 ### Installation
 
 #### macOS
+
 ```bash
 # Install Docker Desktop
 brew install --cask docker
@@ -135,6 +147,7 @@ brew install --cask docker
 ```
 
 #### Linux (Ubuntu/Debian)
+
 ```bash
 # Update package index
 sudo apt update
@@ -157,9 +170,11 @@ sudo usermod -aG docker $USER
 ```
 
 #### Windows
+
 - Download Docker Desktop from [Docker website](https://www.docker.com/products/docker-desktop)
 
 ### Verify Docker Installation
+
 ```bash
 # Check Docker version
 docker --version
@@ -171,12 +186,14 @@ docker run hello-world
 ## 🔧 Local Development Environment Setup
 
 ### 1. Clone Repository
+
 ```bash
 git clone https://github.com/scale600/aws-flarum-devops-serverless.git
 cd aws-flarum-devops-serverless
 ```
 
 ### 2. Install PHP and Composer
+
 ```bash
 # macOS
 brew install php composer
@@ -190,6 +207,7 @@ composer install
 ```
 
 ### 3. Install Node.js (for Amplify)
+
 ```bash
 # macOS
 brew install node
@@ -204,6 +222,7 @@ npm --version
 ```
 
 ### 4. Install Ansible
+
 ```bash
 # macOS
 brew install ansible
@@ -218,6 +237,7 @@ pip3 install ansible
 ## 🔍 AWS Free Tier Limits Verification
 
 ### Check Current Usage
+
 ```bash
 # Check Lambda usage
 aws lambda get-account-settings
@@ -233,6 +253,7 @@ aws apigateway get-rest-apis
 ```
 
 ### Monitor Costs
+
 1. Log into AWS Console
 2. Navigate to Billing & Cost Management
 3. Check Free Tier usage dashboard
@@ -250,6 +271,7 @@ aws apigateway get-rest-apis
 ### Common Issues
 
 #### AWS CLI Authentication Error
+
 ```bash
 # Reconfigure AWS CLI
 aws configure
@@ -259,6 +281,7 @@ aws sts get-caller-identity
 ```
 
 #### Terraform State Lock Error
+
 ```bash
 # Force unlock (use with caution)
 terraform force-unlock <lock-id>
@@ -269,6 +292,7 @@ terraform init
 ```
 
 #### Docker Permission Error
+
 ```bash
 # Add user to docker group
 sudo usermod -aG docker $USER
@@ -278,6 +302,7 @@ sudo usermod -aG docker $USER
 ```
 
 #### PHP/Composer Issues
+
 ```bash
 # Update Composer
 composer self-update
@@ -301,6 +326,7 @@ composer install
 ## 🆘 Support
 
 If you encounter issues:
+
 1. Check the troubleshooting section above
 2. Review AWS CloudTrail logs for API errors
 3. Check GitHub Actions logs for CI/CD issues
