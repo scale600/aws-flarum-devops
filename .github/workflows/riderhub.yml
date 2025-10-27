@@ -71,12 +71,47 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Run Terraform Plan (Infrastructure without Lambda)
+      - name: Initialize Terraform
         run: |
           cd terraform
+          echo "Initializing Terraform..."
           terraform init
-          terraform plan
-          terraform apply -auto-approve
+          echo "Terraform initialized successfully"
+
+      - name: Create ECR Repository
+        run: |
+          cd terraform
+          echo "Creating ECR repository..."
+          terraform apply -auto-approve -target=aws_ecr_repository.riderhub
+          echo "ECR repository created successfully"
+
+      - name: Create DynamoDB Tables
+        run: |
+          cd terraform
+          echo "Creating DynamoDB tables..."
+          terraform apply -auto-approve -target=aws_dynamodb_table.posts -target=aws_dynamodb_table.comments
+          echo "DynamoDB tables created successfully"
+
+      - name: Create S3 Bucket
+        run: |
+          cd terraform
+          echo "Creating S3 bucket..."
+          terraform apply -auto-approve -target=aws_s3_bucket.media -target=aws_s3_bucket_public_access_block.media -target=aws_s3_bucket_versioning.media -target=random_string.bucket_suffix
+          echo "S3 bucket created successfully"
+
+      - name: Create IAM Role and Policy
+        run: |
+          cd terraform
+          echo "Creating IAM role and policy..."
+          terraform apply -auto-approve -target=aws_iam_role.lambda_role -target=aws_iam_role_policy.lambda_policy
+          echo "IAM role and policy created successfully"
+
+      - name: Create SNS Topic
+        run: |
+          cd terraform
+          echo "Creating SNS topic..."
+          terraform apply -auto-approve -target=aws_sns_topic.notifications
+          echo "SNS topic created successfully"
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -92,25 +127,63 @@ jobs:
           # Build a docker container and push it to ECR
           echo "Building Docker image..."
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/riderhub/Dockerfile .
-          
+
           echo "Pushing image to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          
+
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "Image pushed successfully: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-      - name: Create Lambda Function and API Gateway Integration
+      - name: Create Lambda Function
         run: |
           cd terraform
-          echo "Applying Terraform with image tag: ${{ github.sha }}"
-          terraform plan -var="image_tag=${{ github.sha }}"
-          terraform apply -auto-approve -var="image_tag=${{ github.sha }}"
-          echo "Terraform apply completed successfully"
+          echo "Creating Lambda function with image tag: ${{ github.sha }}"
+          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_lambda_function.riderhub
+          echo "Lambda function created successfully"
+
+      - name: Create API Gateway
+        run: |
+          cd terraform
+          echo "Creating API Gateway..."
+          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_rest_api.riderhub -target=aws_api_gateway_resource.posts -target=aws_api_gateway_method.posts
+          echo "API Gateway created successfully"
+
+      - name: Create API Gateway Integration
+        run: |
+          cd terraform
+          echo "Creating API Gateway integration..."
+          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_integration.posts -target=aws_lambda_permission.api_gateway
+          echo "API Gateway integration created successfully"
+
+      - name: Deploy API Gateway
+        run: |
+          cd terraform
+          echo "Deploying API Gateway..."
+          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_deployment.riderhub -target=aws_api_gateway_stage.riderhub
+          echo "API Gateway deployed successfully"
 
       - name: Deploy to Amplify
         run: |
           echo "Frontend deployment to Amplify would happen here"
           echo "API Gateway URL will be available after deployment"
+
+      - name: Show Deployment Results
+        run: |
+          cd terraform
+          echo "=== DEPLOYMENT RESULTS ==="
+          echo "API Gateway URL:"
+          terraform output -raw api_gateway_url 2>/dev/null || echo "Not available yet"
+          echo ""
+          echo "DynamoDB Tables:"
+          terraform output -raw dynamodb_posts_table 2>/dev/null || echo "Not available yet"
+          terraform output -raw dynamodb_comments_table 2>/dev/null || echo "Not available yet"
+          echo ""
+          echo "S3 Bucket:"
+          terraform output -raw s3_bucket_name 2>/dev/null || echo "Not available yet"
+          echo ""
+          echo "Lambda Function:"
+          terraform output -raw lambda_function_name 2>/dev/null || echo "Not available yet"
+          echo "=== DEPLOYMENT COMPLETE ==="
 
       - name: Update Terraform State
         run: |
