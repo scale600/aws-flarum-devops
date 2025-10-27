@@ -76,8 +76,8 @@ jobs:
         run: |
           cd terraform
           terraform init
-          terraform plan -target=aws_ecr_repository.riderhub -target=aws_dynamodb_table.posts -target=aws_dynamodb_table.comments -target=aws_s3_bucket.media -target=aws_s3_bucket_public_access_block.media -target=aws_s3_bucket_versioning.media -target=aws_iam_role.lambda_role -target=aws_iam_role_policy.lambda_policy -target=aws_api_gateway_rest_api.riderhub -target=aws_api_gateway_resource.posts -target=aws_api_gateway_method.posts -target=aws_sns_topic.notifications -target=random_string.bucket_suffix
-          terraform apply -auto-approve -target=aws_ecr_repository.riderhub -target=aws_dynamodb_table.posts -target=aws_dynamodb_table.comments -target=aws_s3_bucket.media -target=aws_s3_bucket_public_access_block.media -target=aws_s3_bucket_versioning.media -target=aws_iam_role.lambda_role -target=aws_iam_role_policy.lambda_policy -target=aws_api_gateway_rest_api.riderhub -target=aws_api_gateway_resource.posts -target=aws_api_gateway_method.posts -target=aws_sns_topic.notifications -target=random_string.bucket_suffix
+          terraform plan
+          terraform apply -auto-approve
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -103,7 +103,7 @@ jobs:
       - name: Create Lambda Function and API Gateway Integration
         run: |
           cd terraform
-          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_lambda_function.riderhub -target=aws_api_gateway_integration.posts -target=aws_lambda_permission.api_gateway -target=aws_api_gateway_deployment.riderhub -target=aws_api_gateway_stage.riderhub
+          terraform apply -auto-approve -var="image_tag=${{ github.sha }}"
 
       - name: Deploy to Amplify
         run: |
