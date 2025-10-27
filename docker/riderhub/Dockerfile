@@ -13,13 +13,13 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/task
 
 # Copy composer files first for better caching
-COPY composer.json composer.lock* ./
+COPY src/riderhub/composer.json src/riderhub/composer.lock* ./
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Copy application files
-COPY . .
+COPY src/riderhub/ .
 
 # Run post-install scripts
 RUN composer run-script post-autoload-dump || true
