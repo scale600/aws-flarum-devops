@@ -86,17 +86,26 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY_NAME }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           # Build a docker container and push it to ECR
+          echo "Building Docker image..."
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/riderhub/Dockerfile .
+          
+          echo "Pushing image to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "Image pushed successfully: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
       - name: Create Lambda Function and API Gateway Integration
         run: |
           cd terraform
+          echo "Applying Terraform with image tag: ${{ github.sha }}"
+          terraform plan -var="image_tag=${{ github.sha }}"
           terraform apply -auto-approve -var="image_tag=${{ github.sha }}"
+          echo "Terraform apply completed successfully"
 
       - name: Deploy to Amplify
         run: |
