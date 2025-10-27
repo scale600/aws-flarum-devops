@@ -31,17 +31,45 @@ class RiderHubHandler extends ApiGatewayHandler
      */
     public function handleRequest(ApiGatewayEvent $event, Context $context): ApiGatewayResponse
     {
-        // Initialize Flarum application with AWS-specific configuration
-        $app = require __DIR__ . '/bootstrap/app.php';
-        
-        // Convert API Gateway event to PSR-7 request
-        $request = $this->createRequestFromEvent($event);
-        
-        // Process the request through Flarum application
-        $response = $app->handle($request);
-        
-        // Convert Symfony response back to API Gateway format
-        return $this->createResponseFromSymfonyResponse($response);
+        try {
+            // Simple test response for now
+            $path = $event->getPath();
+            $method = $event->getMethod();
+            
+            if ($path === '/posts' && $method === 'GET') {
+                $response = [
+                    'message' => 'RiderHub API is working!',
+                    'path' => $path,
+                    'method' => $method,
+                    'timestamp' => date('Y-m-d H:i:s'),
+                    'environment' => $_ENV['APP_ENV'] ?? 'unknown',
+                    'debug' => $_ENV['APP_DEBUG'] ?? 'unknown'
+                ];
+                
+                return new ApiGatewayResponse(200, ['Content-Type' => 'application/json'], json_encode($response));
+            }
+            
+            // Default response
+            $response = [
+                'message' => 'RiderHub API Gateway is working!',
+                'path' => $path,
+                'method' => $method,
+                'timestamp' => date('Y-m-d H:i:s'),
+                'available_endpoints' => ['/posts']
+            ];
+            
+            return new ApiGatewayResponse(200, ['Content-Type' => 'application/json'], json_encode($response));
+            
+        } catch (Exception $e) {
+            $errorResponse = [
+                'error' => 'Internal server error',
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ];
+            
+            return new ApiGatewayResponse(500, ['Content-Type' => 'application/json'], json_encode($errorResponse));
+        }
     }
     
     private function createRequestFromEvent(ApiGatewayEvent $event): \Psr\Http\Message\RequestInterface

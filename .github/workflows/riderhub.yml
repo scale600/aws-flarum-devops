@@ -41,8 +41,302 @@ jobs:
           APP_ENV: testing
           APP_DEBUG: true
 
-  build-and-deploy:
+  # =============================================================================
+  # Infrastructure Setup Phase
+  # =============================================================================
+  setup-environment:
     needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      aws-account-id: ${{ steps.aws-identity.outputs.account }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS connection
+        id: aws-identity
+        run: |
+          echo "Verifying AWS connection..."
+          aws sts get-caller-identity
+          echo "AWS connection verified successfully"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Setup Ansible
+        run: |
+          echo "Installing Ansible..."
+          python -m pip install --upgrade pip
+          pip install ansible
+          ansible --version
+          echo "Ansible setup completed"
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+  # =============================================================================
+  # Infrastructure Deployment Phase
+  # =============================================================================
+  deploy-infrastructure:
+    needs: setup-environment
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      ecr-repository-url: ${{ steps.ecr-output.outputs.repository-url }}
+      s3-bucket-name: ${{ steps.s3-output.outputs.bucket-name }}
+      dynamodb-posts-table: ${{ steps.dynamodb-output.outputs.posts-table }}
+      dynamodb-comments-table: ${{ steps.dynamodb-output.outputs.comments-table }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Initialize Terraform
+        run: |
+          cd terraform
+          echo "Initializing Terraform..."
+          terraform init
+          echo "Terraform initialized successfully"
+
+      - name: Create ECR Repository
+        id: ecr-output
+        run: |
+          cd terraform
+          echo "Creating ECR repository..."
+          terraform apply -auto-approve -target=aws_ecr_repository.riderhub
+          echo "ECR repository created successfully"
+          echo "repository-url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+
+      - name: Create DynamoDB Tables
+        id: dynamodb-output
+        run: |
+          cd terraform
+          echo "Creating DynamoDB tables..."
+          terraform apply -auto-approve -target=aws_dynamodb_table.posts -target=aws_dynamodb_table.comments
+          echo "DynamoDB tables created successfully"
+          echo "posts-table=$(terraform output -raw dynamodb_posts_table)" >> $GITHUB_OUTPUT
+          echo "comments-table=$(terraform output -raw dynamodb_comments_table)" >> $GITHUB_OUTPUT
+
+      - name: Create S3 Bucket
+        id: s3-output
+        run: |
+          cd terraform
+          echo "Creating S3 bucket..."
+          terraform apply -auto-approve -target=aws_s3_bucket.media -target=aws_s3_bucket_public_access_block.media -target=aws_s3_bucket_versioning.media -target=random_string.bucket_suffix
+          echo "S3 bucket created successfully"
+          echo "bucket-name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+
+      - name: Create IAM Role and Policy
+        run: |
+          cd terraform
+          echo "Creating IAM role and policy..."
+          terraform apply -auto-approve -target=aws_iam_role.lambda_role -target=aws_iam_role_policy.lambda_policy
+          echo "IAM role and policy created successfully"
+
+      - name: Create SNS Topic
+        run: |
+          cd terraform
+          echo "Creating SNS topic..."
+          terraform apply -auto-approve -target=aws_sns_topic.notifications
+          echo "SNS topic created successfully"
+
+  # =============================================================================
+  # Application Build Phase
+  # =============================================================================
+  build-application:
+    needs: deploy-infrastructure
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      image-uri: ${{ steps.build-image.outputs.image }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Building Docker image..."
+          echo "ECR Registry: $ECR_REGISTRY"
+          echo "ECR Repository: $ECR_REPOSITORY"
+          echo "Image Tag: $IMAGE_TAG"
+          
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/riderhub/Dockerfile .
+          echo "Docker image built successfully"
+
+      - name: Push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Pushing image to ECR..."
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "Image pushed successfully: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  # =============================================================================
+  # Lambda Deployment Phase
+  # =============================================================================
+  deploy-lambda:
+    needs: [deploy-infrastructure, build-application]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      lambda-function-name: ${{ steps.lambda-output.outputs.function-name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Initialize Terraform
+        run: |
+          cd terraform
+          echo "Initializing Terraform for Lambda deployment..."
+          terraform init
+          echo "Terraform initialized successfully"
+
+      - name: Create Lambda Function
+        id: lambda-output
+        run: |
+          cd terraform
+          echo "Creating Lambda function with image tag: ${{ github.sha }}"
+          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_lambda_function.riderhub
+          echo "Lambda function created successfully"
+          echo "function-name=$(terraform output -raw lambda_function_name)" >> $GITHUB_OUTPUT
+
+  # =============================================================================
+  # API Gateway Deployment Phase
+  # =============================================================================
+  deploy-api-gateway:
+    needs: [deploy-infrastructure, deploy-lambda]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      api-gateway-url: ${{ steps.api-output.outputs.gateway-url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Initialize Terraform
+        run: |
+          cd terraform
+          echo "Initializing Terraform for API Gateway deployment..."
+          terraform init
+          echo "Terraform initialized successfully"
+
+      - name: Create API Gateway Resources
+        run: |
+          cd terraform
+          echo "Creating API Gateway resources..."
+          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_rest_api.riderhub -target=aws_api_gateway_resource.posts -target=aws_api_gateway_method.posts
+          echo "API Gateway resources created successfully"
+
+      - name: Create API Gateway Integration
+        run: |
+          cd terraform
+          echo "Creating API Gateway integration..."
+          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_integration.posts -target=aws_lambda_permission.api_gateway
+          echo "API Gateway integration created successfully"
+
+      - name: Deploy API Gateway
+        id: api-output
+        run: |
+          cd terraform
+          echo "Deploying API Gateway..."
+          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_deployment.riderhub -target=aws_api_gateway_stage.riderhub
+          echo "API Gateway deployed successfully"
+          echo "gateway-url=$(terraform output -raw api_gateway_url)" >> $GITHUB_OUTPUT
+
+  # =============================================================================
+  # Frontend Deployment Phase
+  # =============================================================================
+  deploy-frontend:
+    needs: [deploy-api-gateway]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Amplify
+        run: |
+          echo "Frontend deployment to Amplify would happen here"
+          echo "API Gateway URL: ${{ needs.deploy-api-gateway.outputs.api-gateway-url }}"
+
+  # =============================================================================
+  # Configuration and Finalization Phase
+  # =============================================================================
+  finalize-deployment:
+    needs: [deploy-api-gateway, deploy-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
@@ -62,110 +356,12 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Setup Ansible
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible
-          ansible --version
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Initialize Terraform
         run: |
           cd terraform
-          echo "Initializing Terraform..."
+          echo "Initializing Terraform for finalization..."
           terraform init
           echo "Terraform initialized successfully"
-
-      - name: Create ECR Repository
-        run: |
-          cd terraform
-          echo "Creating ECR repository..."
-          terraform apply -auto-approve -target=aws_ecr_repository.riderhub
-          echo "ECR repository created successfully"
-
-      - name: Create DynamoDB Tables
-        run: |
-          cd terraform
-          echo "Creating DynamoDB tables..."
-          terraform apply -auto-approve -target=aws_dynamodb_table.posts -target=aws_dynamodb_table.comments
-          echo "DynamoDB tables created successfully"
-
-      - name: Create S3 Bucket
-        run: |
-          cd terraform
-          echo "Creating S3 bucket..."
-          terraform apply -auto-approve -target=aws_s3_bucket.media -target=aws_s3_bucket_public_access_block.media -target=aws_s3_bucket_versioning.media -target=random_string.bucket_suffix
-          echo "S3 bucket created successfully"
-
-      - name: Create IAM Role and Policy
-        run: |
-          cd terraform
-          echo "Creating IAM role and policy..."
-          terraform apply -auto-approve -target=aws_iam_role.lambda_role -target=aws_iam_role_policy.lambda_policy
-          echo "IAM role and policy created successfully"
-
-      - name: Create SNS Topic
-        run: |
-          cd terraform
-          echo "Creating SNS topic..."
-          terraform apply -auto-approve -target=aws_sns_topic.notifications
-          echo "SNS topic created successfully"
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY_NAME }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          # Build a docker container and push it to ECR
-          echo "Building Docker image..."
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/riderhub/Dockerfile .
-
-          echo "Pushing image to ECR..."
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "Image pushed successfully: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
-      - name: Create Lambda Function
-        run: |
-          cd terraform
-          echo "Creating Lambda function with image tag: ${{ github.sha }}"
-          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_lambda_function.riderhub
-          echo "Lambda function created successfully"
-
-      - name: Create API Gateway
-        run: |
-          cd terraform
-          echo "Creating API Gateway..."
-          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_rest_api.riderhub -target=aws_api_gateway_resource.posts -target=aws_api_gateway_method.posts
-          echo "API Gateway created successfully"
-
-      - name: Create API Gateway Integration
-        run: |
-          cd terraform
-          echo "Creating API Gateway integration..."
-          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_integration.posts -target=aws_lambda_permission.api_gateway
-          echo "API Gateway integration created successfully"
-
-      - name: Deploy API Gateway
-        run: |
-          cd terraform
-          echo "Deploying API Gateway..."
-          terraform apply -auto-approve -var="image_tag=${{ github.sha }}" -target=aws_api_gateway_deployment.riderhub -target=aws_api_gateway_stage.riderhub
-          echo "API Gateway deployed successfully"
-
-      - name: Deploy to Amplify
-        run: |
-          echo "Frontend deployment to Amplify would happen here"
-          echo "API Gateway URL will be available after deployment"
 
       - name: Show Deployment Results
         run: |
@@ -188,7 +384,9 @@ jobs:
       - name: Update Terraform State
         run: |
           cd terraform
+          echo "Updating Terraform state..."
           terraform refresh
+          echo "Terraform state updated successfully"
 
       - name: Run Ansible Configuration
         run: |
