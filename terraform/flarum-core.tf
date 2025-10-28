@@ -104,12 +104,13 @@ resource "aws_subnet" "private_2" {
 resource "aws_instance" "flarum" {
   ami           = "ami-0c02fb55956c7d316" # Amazon Linux 2 AMI
   instance_type = "t3.micro"
-  
+
   key_name = aws_key_pair.flarum.key_name
-  
+
   vpc_security_group_ids = [aws_security_group.flarum_web.id]
   subnet_id              = aws_subnet.public_1.id
-  
+  iam_instance_profile   = aws_iam_instance_profile.flarum.name
+
   user_data = base64encode(templatefile("${path.module}/user-data.sh", {
     db_host     = aws_db_instance.flarum.endpoint
     db_name     = aws_db_instance.flarum.db_name
@@ -118,13 +119,13 @@ resource "aws_instance" "flarum" {
     s3_bucket   = aws_s3_bucket.flarum_files.bucket
     aws_region  = var.aws_region
   }))
-  
+
   root_block_device {
     volume_type = "gp3"
     volume_size = 20
     encrypted   = true
   }
-  
+
   tags = {
     Name        = "${var.project_name}-flarum-core"
     Service     = "Flarum"
@@ -135,15 +136,27 @@ resource "aws_instance" "flarum" {
 # =============================================================================
 # Key Pair for EC2 Access
 # =============================================================================
+resource "tls_private_key" "flarum" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 resource "aws_key_pair" "flarum" {
   key_name   = "${var.project_name}-flarum-key"
-  public_key = file("~/.ssh/id_rsa.pub")
-  
+  public_key = tls_private_key.flarum.public_key_openssh
+
   tags = {
     Name        = "${var.project_name}-flarum-key"
     Service     = "EC2"
     Environment = var.environment
   }
+}
+
+# Save the private key locally (for SSH access)
+resource "local_file" "private_key" {
+  content         = tls_private_key.flarum.private_key_pem
+  filename        = "${path.module}/${var.project_name}-flarum-key.pem"
+  file_permission = "0600"
 }
 
 # =============================================================================
@@ -152,7 +165,7 @@ resource "aws_key_pair" "flarum" {
 resource "aws_security_group" "flarum_web" {
   name_prefix = "${var.project_name}-flarum-web-"
   vpc_id      = data.aws_vpc.flarum.id
-  
+
   # HTTP
   ingress {
     from_port   = 80
@@ -160,7 +173,7 @@ resource "aws_security_group" "flarum_web" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   # HTTPS
   ingress {
     from_port   = 443
@@ -168,7 +181,7 @@ resource "aws_security_group" "flarum_web" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   # SSH
   ingress {
     from_port   = 22
@@ -176,7 +189,7 @@ resource "aws_security_group" "flarum_web" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   # All outbound traffic
   egress {
     from_port   = 0
@@ -184,7 +197,7 @@ resource "aws_security_group" "flarum_web" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   tags = {
     Name        = "${var.project_name}-flarum-web-sg"
     Service     = "Flarum"
@@ -201,9 +214,9 @@ resource "aws_lb" "flarum" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.flarum_web.id]
   subnets            = [aws_subnet.public_1.id, aws_subnet.public_2.id]
-  
+
   enable_deletion_protection = false
-  
+
   tags = {
     Name        = "${var.project_name}-flarum-alb"
     Service     = "ALB"
@@ -216,7 +229,7 @@ resource "aws_lb_target_group" "flarum" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.flarum.id
-  
+
   health_check {
     enabled             = true
     healthy_threshold   = 2
@@ -228,7 +241,7 @@ resource "aws_lb_target_group" "flarum" {
     timeout             = 5
     unhealthy_threshold = 2
   }
-  
+
   tags = {
     Name        = "${var.project_name}-flarum-tg"
     Service     = "ALB"
@@ -246,7 +259,7 @@ resource "aws_lb_listener" "flarum" {
   load_balancer_arn = aws_lb.flarum.arn
   port              = "80"
   protocol          = "HTTP"
-  
+
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.flarum.arn
@@ -258,7 +271,7 @@ resource "aws_lb_listener" "flarum" {
 # =============================================================================
 resource "aws_iam_role" "flarum_instance" {
   name = "${var.project_name}-flarum-instance-role"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -271,7 +284,7 @@ resource "aws_iam_role" "flarum_instance" {
       }
     ]
   })
-  
+
   tags = {
     Name        = "${var.project_name}-flarum-instance-role"
     Service     = "IAM"
@@ -282,7 +295,7 @@ resource "aws_iam_role" "flarum_instance" {
 resource "aws_iam_instance_profile" "flarum" {
   name = "${var.project_name}-flarum-instance-profile"
   role = aws_iam_role.flarum_instance.name
-  
+
   tags = {
     Name        = "${var.project_name}-flarum-instance-profile"
     Service     = "IAM"
@@ -298,7 +311,7 @@ resource "aws_iam_role_policy_attachment" "flarum_ssm" {
 resource "aws_iam_role_policy" "flarum_s3" {
   name = "${var.project_name}-flarum-s3-policy"
   role = aws_iam_role.flarum_instance.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

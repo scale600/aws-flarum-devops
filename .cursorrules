@@ -1,49 +1,395 @@
-# RiderHub Project Cursor Rules
+# RiderHub AWS Flarum DevOps Project - Cursor Rules
 
-## Project Context
+## Project Overview
 
-This is a serverless Flarum-based motorcycle community forum project using AWS services.
+This is a production-ready serverless Flarum-based motorcycle community forum project deployed on AWS Free Tier. The project showcases modern DevOps practices including Infrastructure as Code (Terraform), containerization (Docker), CI/CD (GitHub Actions), and cloud-native architecture.
 
 ## Technology Stack
 
-- Backend: PHP 8.1 + Flarum + Bref (Lambda)
-- Infrastructure: Terraform + Ansible + Docker
-- Frontend: React + Amplify
-- Database: DynamoDB
-- Storage: S3
-- CI/CD: GitHub Actions
+### Backend
+- **Language**: PHP 8.1
+- **Framework**: Flarum OSS forum software
+- **Runtime**: Bref for AWS Lambda (alternative deployment)
+- **Database**: Amazon RDS MySQL 8.0
+- **Storage**: Amazon S3
+- **Web Server**: Apache (EC2 deployment) or Lambda (serverless deployment)
 
-## Coding Standards
+### Frontend
+- **Language**: TypeScript
+- **Framework**: React 18
+- **Build Tool**: Vite
+- **Styling**: TailwindCSS
+- **State Management**: TanStack Query (React Query)
+- **Routing**: React Router v6
 
+### Infrastructure
+- **IaC**: Terraform (HCL)
+- **Configuration**: Ansible
+- **Containers**: Docker
+- **CI/CD**: GitHub Actions
+- **Cloud Provider**: AWS (Free Tier optimized)
+
+## Coding Standards & Best Practices
+
+### General Principles
+1. **Clean Code**: Write code that is readable, maintainable, and self-documenting
+2. **DRY Principle**: Don't Repeat Yourself - extract reusable components and functions
+3. **Single Responsibility**: Each function/class should have one clear purpose
+4. **Meaningful Names**: Use descriptive variable, function, and file names
+5. **Comments**: Use comments to explain "why", not "what" - code should be self-explanatory
+
+### PHP Standards
 - Follow PSR-4 autoloading standards
-- Use meaningful variable and function names
-- Add comprehensive comments for complex logic
-- Follow Flarum extension development best practices
+- Use type hints for function parameters and return types
+- Follow PSR-12 coding style
+- Use meaningful variable and function names in `snake_case`
+- Add PHPDoc comments for classes and public methods
+- Handle errors gracefully with try-catch blocks
+- Use environment variables for configuration (never hardcode credentials)
 
-## File Structure
+Example:
+```php
+/**
+ * Calculate the discount for a product based on its price
+ *
+ * @param float $product_price The original product price
+ * @return float The discounted price
+ */
+function calculate_product_discount(float $product_price): float
+{
+    $discount_rate = get_discount_rate($product_price);
+    $discount_amount = $product_price * $discount_rate;
+    return $product_price - $discount_amount;
+}
+```
 
-- `src/riderhub/` - Flarum application code
-- `terraform/` - Infrastructure as Code
-- `ansible/` - Configuration management
-- `docker/` - Containerization
-- `.github/workflows/` - CI/CD pipelines
+### TypeScript/React Standards
+- Use functional components with hooks (no class components)
+- Use TypeScript strict mode
+- Define interfaces for props and data structures
+- Use `camelCase` for variables and functions
+- Use `PascalCase` for components and interfaces
+- Keep components small and focused (Single Responsibility Principle)
+- Use custom hooks for reusable logic
+- Implement proper error handling and loading states
+
+Example:
+```typescript
+interface DiscussionProps {
+  id: number;
+  title: string;
+  content: string;
+}
+
+const Discussion: React.FC<DiscussionProps> = ({ id, title, content }) => {
+  return (
+    <div className="card">
+      <h3>{title}</h3>
+      <p>{content}</p>
+    </div>
+  );
+};
+```
+
+### Terraform Standards
+- Use meaningful resource names with project prefix
+- Group related resources in separate files
+- Use variables for configurable values
+- Add comprehensive comments for complex resources
+- Use data sources instead of hardcoding IDs where possible
+- Tag all resources consistently
+- Follow AWS naming conventions
+
+Example:
+```hcl
+# EC2 instance for Flarum application hosting
+resource "aws_instance" "flarum" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  
+  tags = {
+    Name        = "${var.project_name}-flarum"
+    Service     = "Flarum"
+    Environment = var.environment
+  }
+}
+```
+
+## File Organization
+
+### Project Structure
+```
+aws-flarum-devops/
+├── terraform/              # Infrastructure as Code
+│   ├── main.tf            # Provider configuration
+│   ├── flarum-core.tf     # EC2, ALB, networking
+│   ├── flarum-clean.tf    # RDS, S3, core services
+│   └── user-data.sh       # EC2 bootstrap script
+├── src/flarum/            # PHP backend application
+│   ├── lambda.php         # Lambda handler
+│   ├── bootstrap.php      # Application bootstrap
+│   ├── config.php         # Configuration
+│   └── composer.json      # PHP dependencies
+├── frontend/              # React frontend application
+│   ├── src/
+│   │   ├── components/    # Reusable components
+│   │   ├── pages/         # Page components
+│   │   └── App.tsx        # Main app component
+│   └── package.json       # Node dependencies
+├── docker/                # Docker configurations
+│   └── flarum/           # Flarum Docker image
+├── ansible/               # Configuration management
+├── .github/workflows/     # CI/CD pipelines
+└── scripts/              # Utility scripts
+```
+
+### Naming Conventions
+- **Terraform files**: `<service>-<component>.tf` (e.g., `flarum-core.tf`)
+- **PHP files**: `<descriptor>.php` (e.g., `lambda.php`, `bootstrap.php`)
+- **React components**: `<ComponentName>.tsx` (PascalCase)
+- **React pages**: `<PageName>.tsx` (PascalCase)
+- **Scripts**: `<action>-<target>.sh` (e.g., `cleanup-aws-resources.sh`)
 
 ## AWS Best Practices
 
-- Use least privilege IAM policies
-- Implement proper error handling
-- Follow serverless architecture patterns
-- Optimize for AWS Free Tier limits
+### Free Tier Optimization
+- Use t3.micro for EC2 instances
+- Limit RDS storage to 20GB
+- Keep S3 storage under 5GB
+- Monitor data transfer to stay under 15GB/month
+- Use single-AZ RDS for cost savings (multi-AZ for production)
 
-## Security Guidelines
+### Security
+- **Never commit AWS credentials** - use environment variables or IAM roles
+- Use IAM roles with least privilege principle
+- Enable encryption for RDS and S3
+- Use security groups to restrict access
+- Keep private resources in private subnets
+- Use HTTPS for all public endpoints
+- Regularly rotate credentials
 
-- Never commit AWS credentials
-- Use environment variables for sensitive data
-- Implement proper input validation
-- Follow OWASP security guidelines
+### Resource Management
+- Tag all resources with Project, Environment, and ManagedBy
+- Use descriptive names for easy identification
+- Implement proper cleanup scripts
+- Use Terraform state management
+- Enable CloudWatch monitoring for production
 
-## Documentation
+## Development Workflow
 
-- Update README.md for significant changes
-- Document API endpoints and configurations
-- Maintain aws-resources.md for resource tracking
+### Local Development
+1. Clone the repository
+2. Install dependencies (`composer install`, `npm install`)
+3. Copy `.env.example` to `.env` and configure
+4. Run local development servers
+5. Make changes and test locally
+6. Run linters and tests before committing
+
+### Git Workflow
+- Create feature branches from `main`
+- Use descriptive branch names: `feature/add-user-auth`, `fix/database-connection`
+- Write meaningful commit messages:
+  - Good: "Add user authentication with JWT tokens"
+  - Bad: "Update files"
+- Keep commits focused and atomic
+- Run tests before pushing
+- Create pull requests for code review
+
+### Deployment Workflow
+1. Push changes to GitHub
+2. GitHub Actions automatically:
+   - Runs tests
+   - Builds Docker images
+   - Provisions infrastructure
+   - Deploys application
+3. Monitor deployment in Actions tab
+4. Verify deployment with smoke tests
+
+## Testing Requirements
+
+### Backend (PHP)
+- Write unit tests with PHPUnit
+- Test coverage > 70%
+- Test API endpoints
+- Test database operations
+- Mock external dependencies
+
+### Frontend (React)
+- Component tests with React Testing Library
+- Integration tests for critical flows
+- E2E tests for main user journeys
+- Test error states and edge cases
+
+### Infrastructure (Terraform)
+- Run `terraform validate` before commit
+- Run `terraform plan` to preview changes
+- Test in staging environment first
+- Use `terraform fmt` for consistent formatting
+
+## Error Handling
+
+### PHP
+```php
+try {
+    $result = risky_operation();
+    return createResponse(200, ['data' => $result]);
+} catch (Exception $e) {
+    error_log("Operation failed: " . $e->getMessage());
+    return createResponse(500, [
+        'error' => 'Internal Server Error',
+        'message' => $e->getMessage()
+    ]);
+}
+```
+
+### React
+```typescript
+const { data, error, isLoading } = useQuery({
+  queryKey: ['discussions'],
+  queryFn: fetchDiscussions,
+});
+
+if (error) {
+  return <ErrorMessage message="Failed to load discussions" />;
+}
+
+if (isLoading) {
+  return <LoadingSpinner />;
+}
+
+return <DiscussionList discussions={data} />;
+```
+
+## Performance Considerations
+
+### Backend
+- Use database indexing for frequently queried fields
+- Implement caching for expensive operations
+- Optimize S3 uploads with multipart upload
+- Use connection pooling for database
+- Minimize Lambda cold starts with provisioned concurrency (if needed)
+
+### Frontend
+- Code splitting with React.lazy
+- Image optimization (WebP, lazy loading)
+- Memoization for expensive computations
+- Virtual scrolling for long lists
+- Bundle size optimization with tree shaking
+
+### Infrastructure
+- Use CloudFront CDN for static assets
+- Enable gzip compression
+- Implement database read replicas for high traffic
+- Use ElastiCache for session storage
+
+## Documentation Standards
+
+### Code Comments
+- Explain complex algorithms and business logic
+- Document function parameters and return values
+- Add TODO comments with ticket numbers
+- Keep comments up-to-date with code changes
+
+### README Files
+- Clear project description
+- Installation instructions
+- Usage examples
+- Troubleshooting section
+- Contributing guidelines
+
+### API Documentation
+- Document all endpoints
+- Include request/response examples
+- List required parameters
+- Document error responses
+
+## Monitoring & Logging
+
+### Application Logs
+- Use structured logging (JSON format)
+- Include context (user ID, request ID, timestamp)
+- Log errors with stack traces
+- Use appropriate log levels (DEBUG, INFO, WARN, ERROR)
+
+### Infrastructure Monitoring
+- CloudWatch alarms for critical metrics
+- Monitor RDS performance
+- Track Lambda errors and cold starts
+- Monitor S3 bucket size and costs
+- Set up billing alerts
+
+## Maintenance & Operations
+
+### Regular Tasks
+- Review and update dependencies monthly
+- Monitor AWS Free Tier usage
+- Review CloudWatch logs for errors
+- Test backup and restore procedures
+- Update documentation with changes
+
+### Incident Response
+1. Check CloudWatch logs
+2. Review recent deployments
+3. Verify resource health in AWS Console
+4. Roll back if necessary
+5. Document incident and resolution
+
+## AI Assistant Guidelines
+
+When working with this codebase:
+1. Maintain consistent code style across files
+2. Follow the established project structure
+3. Use the technology stack specified
+4. Implement proper error handling
+5. Add comprehensive comments
+6. Update documentation when making changes
+7. Ensure AWS Free Tier compliance
+8. Test changes before committing
+9. Use meaningful commit messages
+10. Follow security best practices
+
+## Common Commands Reference
+
+### Terraform
+```bash
+terraform init          # Initialize Terraform
+terraform plan          # Preview changes
+terraform apply         # Apply changes
+terraform destroy       # Destroy infrastructure
+terraform fmt           # Format code
+terraform validate      # Validate configuration
+```
+
+### Docker
+```bash
+docker build -t flarum .                    # Build image
+docker push <ecr-url>:latest               # Push to ECR
+docker run -p 8080:8080 flarum             # Run locally
+```
+
+### PHP/Composer
+```bash
+composer install        # Install dependencies
+composer update         # Update dependencies
+vendor/bin/phpunit      # Run tests
+```
+
+### React/Node
+```bash
+npm install            # Install dependencies
+npm run dev            # Development server
+npm run build          # Production build
+npm run lint           # Run linter
+```
+
+## Project Goals
+
+1. **Educational**: Demonstrate DevOps and cloud architecture best practices
+2. **Portfolio**: Showcase full-stack development and infrastructure skills
+3. **Community**: Provide a platform for motorcycle enthusiasts
+4. **Cost-Effective**: Operate entirely within AWS Free Tier
+5. **Production-Ready**: Real-world deployment-ready application
+
+---
+
+**Remember**: Write code that your future self (and others) will thank you for. Prioritize clarity over cleverness.

@@ -6,12 +6,20 @@ terraform/.terraform/
 terraform/terraform.tfstate*
 terraform/response.json
 terraform/.terraform.lock.hcl
+terraform/*.backup
+terraform/*.bak
 
 # Temporary files
 *.zip
 *.log
+*.b64
 response.json
 function.zip
+payload.b64
+
+# PHP Dependencies
+vendor/
+composer.lock
 
 # IDE files
 .vscode/
@@ -21,3 +29,18 @@ function.zip
 
 # OS files
 Thumbs.db
+
+# AWS Credentials (never commit)
+*.pem
+*.key
+.env
+.env.local
+
+# Node modules
+node_modules/
+.npm/
+
+# Build artifacts
+dist/
+build/
+coverage/
