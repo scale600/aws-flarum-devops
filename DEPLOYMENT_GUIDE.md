@@ -198,3 +198,4 @@ For issues or questions:
 
 **Happy Deploying! 🏍️**
 # Deployment triggered with AWS credentials configured
+# Lambda function created manually - testing deployment
