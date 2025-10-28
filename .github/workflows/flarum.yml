@@ -201,6 +201,11 @@ jobs:
           IMAGE_URI="${{ needs.build-application.outputs.image-uri }}"
           echo "Image URI: $IMAGE_URI"
           
+          if [ -z "$IMAGE_URI" ]; then
+            echo "Error: IMAGE_URI is empty. Cannot update Lambda function."
+            exit 1
+          fi
+          
           aws lambda update-function-code \
             --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
             --image-uri $IMAGE_URI \
