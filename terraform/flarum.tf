@@ -58,13 +58,10 @@ data "aws_vpc" "flarum" {
     name   = "tag:Name"
     values = ["${var.project_name}-flarum-vpc"]
   }
-  
-  # Use the most recent VPC if multiple exist
-  most_recent = true
 }
 
 resource "aws_internet_gateway" "flarum" {
-  vpc_id = data.data.aws_vpc.flarum.id
+  vpc_id = data.aws_vpc.flarum.id
 
   tags = {
     Name        = "${var.project_name}-flarum-igw"
