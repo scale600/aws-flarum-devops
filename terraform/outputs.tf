@@ -170,12 +170,12 @@ output "aws_region" {
 output "quick_access_info" {
   description = "Quick access information for the deployment"
   value = {
-    forum_url     = local.forum_url
-    ssh_command   = "ssh -i ${local.ssh_key_path} ec2-user@${aws_instance.flarum.public_ip}"
-    db_endpoint   = aws_db_instance.flarum.endpoint
-    s3_bucket     = aws_s3_bucket.flarum_files.bucket
-    environment   = var.environment
-    deployed_at   = timestamp()
+    forum_url   = local.forum_url
+    ssh_command = "ssh -i ${local.ssh_key_path} ec2-user@${aws_instance.flarum.public_ip}"
+    db_endpoint = aws_db_instance.flarum.endpoint
+    s3_bucket   = aws_s3_bucket.flarum_files.bucket
+    environment = var.environment
+    deployed_at = timestamp()
   }
   sensitive = true
 }
