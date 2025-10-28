@@ -1,6 +1,10 @@
 .DS_Store
 *.DS_Store
 
+# IDE Configuration
+.cursorrules
+.project-summary.txt
+
 # Terraform
 terraform/.terraform/
 terraform/terraform.tfstate*
