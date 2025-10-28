@@ -1,7 +1,7 @@
 # =============================================================================
 # Flarum OSS Dockerfile for AWS Lambda
 # =============================================================================
-FROM bref/php-81-fpm:2
+FROM bref/php-81:2
 
 # Set working directory
 WORKDIR /var/task
