@@ -1,8 +1,11 @@
 # =============================================================================
-# AWS Provider Configuration
+# RiderHub Flarum Infrastructure
+# Terraform configuration for AWS-based Flarum forum deployment
 # =============================================================================
+
 terraform {
   required_version = ">= 1.5.0"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -21,58 +24,39 @@ terraform {
       version = "~> 2.0"
     }
   }
+
+  # Backend configuration (uncomment and configure for remote state)
+  # backend "s3" {
+  #   bucket         = "your-terraform-state-bucket"
+  #   key            = "riderhub/flarum/terraform.tfstate"
+  #   region         = "us-east-1"
+  #   encrypt        = true
+  #   dynamodb_table = "terraform-state-lock"
+  # }
 }
+
+# =============================================================================
+# AWS Provider
+# =============================================================================
 
 provider "aws" {
   region = var.aws_region
 
   default_tags {
-    tags = {
-      Project     = "RiderHub"
-      Environment = var.environment
-      ManagedBy   = "Terraform"
-    }
+    tags = local.common_tags
   }
 }
 
 # =============================================================================
-# Variables
+# Random Resources for Unique Naming
 # =============================================================================
-variable "aws_region" {
-  description = "AWS region for resources"
-  type        = string
-  default     = "us-east-1"
-}
 
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "production"
-}
-
-variable "project_name" {
-  description = "Project name"
-  type        = string
-  default     = "riderhub"
-}
-
-variable "aws_account_id" {
-  description = "AWS Account ID"
-  type        = string
-  default     = "753523452116"
-}
-
-variable "image_tag" {
-  description = "Docker image tag for Lambda function"
-  type        = string
-  default     = "latest"
-}
-
-# =============================================================================
-# Random Resources
-# =============================================================================
 resource "random_string" "s3_suffix" {
   length  = 8
   special = false
   upper   = false
+  
+  keepers = {
+    project = var.project_name
+  }
 }
