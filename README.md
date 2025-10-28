@@ -23,10 +23,12 @@ Automated forum deployment demonstrating Infrastructure as Code and CI/CD best p
 1. **Fork this repository**
 
 2. **Add GitHub Secrets** (`Settings` → `Secrets` → `Actions`):
+
    - `AWS_ACCESS_KEY_ID`
    - `AWS_SECRET_ACCESS_KEY`
 
 3. **Deploy:**
+
 ```bash
 git clone https://github.com/YOUR_USERNAME/aws-flarum-devops.git
 cd aws-flarum-devops
@@ -57,6 +59,7 @@ aws-flarum-devops/
 ## CI/CD Pipeline
 
 On push to `main`:
+
 1. Run tests (PHPUnit)
 2. Provision infrastructure (Terraform)
 3. Configure server (Apache, PHP, MySQL)
@@ -69,10 +72,10 @@ On push to `main`:
 
 ## Cost
 
-| Tier | Monthly |
-|------|---------|
-| Free Tier (12 months) | $0 |
-| After | ~$10 |
+| Tier                  | Monthly |
+| --------------------- | ------- |
+| Free Tier (12 months) | $0      |
+| After                 | ~$10    |
 
 ---
 
@@ -95,11 +98,11 @@ vendor/bin/phpunit
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| 503 error | Wait 5 min - installing |
-| Actions fail | Check AWS credentials |
-| Can't SSH | Check security group port 22 |
+| Issue        | Solution                     |
+| ------------ | ---------------------------- |
+| 503 error    | Wait 5 min - installing      |
+| Actions fail | Check AWS credentials        |
+| Can't SSH    | Check security group port 22 |
 
 ---
 
