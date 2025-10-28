@@ -54,10 +54,8 @@ resource "aws_db_instance" "flarum" {
 # =============================================================================
 # Use existing VPC instead of creating a new one (VPC limit reached)
 data "aws_vpc" "flarum" {
-  filter {
-    name   = "tag:Name"
-    values = ["${var.project_name}-flarum-vpc"]
-  }
+  # Use a specific VPC ID to avoid multiple matches
+  id = "vpc-0a9c03edd4a0eda4f"
 }
 
 resource "aws_internet_gateway" "flarum" {
