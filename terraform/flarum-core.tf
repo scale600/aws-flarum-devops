@@ -111,15 +111,16 @@ resource "aws_instance" "flarum" {
   subnet_id              = aws_subnet.public_1.id
   iam_instance_profile   = aws_iam_instance_profile.flarum.name
 
-  # Using minimal user-data for FAST deployment (2-3 minutes instead of 15-20 minutes)
-  user_data = base64encode(file("${path.module}/user-data-minimal.sh"))
+  # Using standalone script: Complete Flarum stack on EC2 (MySQL + Apache + Flarum)
+  # No RDS, No S3 - Everything on one instance for simplicity
+  user_data = base64encode(file("${path.module}/user-data-standalone.sh"))
   
   # Force replacement of EC2 instance to apply new user-data
   user_data_replace_on_change = true
 
   root_block_device {
     volume_type = "gp3"
-    volume_size = 20
+    volume_size = 30  # Increased for local MySQL database and file storage
     encrypted   = true
   }
 
