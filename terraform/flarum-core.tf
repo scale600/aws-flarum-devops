@@ -111,14 +111,8 @@ resource "aws_instance" "flarum" {
   subnet_id              = aws_subnet.public_1.id
   iam_instance_profile   = aws_iam_instance_profile.flarum.name
 
-  user_data = base64encode(templatefile("${path.module}/user-data.sh", {
-    db_host     = aws_db_instance.flarum.endpoint
-    db_name     = aws_db_instance.flarum.db_name
-    db_username = aws_db_instance.flarum.username
-    db_password = random_password.db_password.result
-    s3_bucket   = aws_s3_bucket.flarum_files.bucket
-    aws_region  = var.aws_region
-  }))
+  # Using minimal user-data for FAST deployment (2-3 minutes instead of 15-20 minutes)
+  user_data = base64encode(file("${path.module}/user-data-minimal.sh"))
 
   root_block_device {
     volume_type = "gp3"
