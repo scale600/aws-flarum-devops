@@ -1,108 +1,83 @@
-# 🏍️ RiderHub - AWS Flarum Forum with Full DevOps Automation
+# 🏍️ AWS Flarum Forum - DevOps Automation Project
 
-> **Production-ready forum deployment with complete CI/CD automation using AWS EC2, Terraform, Docker, and GitHub Actions**
+> **Full-stack forum deployment with Terraform, Docker, GitHub Actions, and AWS**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Terraform](https://img.shields.io/badge/Terraform-1.5+-purple.svg)](https://www.terraform.io/)
 [![AWS](https://img.shields.io/badge/AWS-EC2-orange.svg)](https://aws.amazon.com/)
 
-A motorcycle community forum built with Flarum, showcasing modern DevOps practices with Infrastructure as Code, automated CI/CD pipelines, and cloud-native architecture.
+Production-ready forum application demonstrating Infrastructure as Code, CI/CD automation, and cloud deployment best practices.
 
 ---
 
-## 🎯 What is This?
+## 🎯 Overview
 
-This project demonstrates **enterprise-level DevOps automation** by deploying a complete forum application with:
+DevOps hands-on project showcasing automated infrastructure provisioning and deployment.
 
-- ✅ **Infrastructure as Code** (Terraform)
-- ✅ **CI/CD Pipeline** (GitHub Actions)
-- ✅ **Cloud Architecture** (AWS EC2)
-- ✅ **Containerization** (Docker-ready)
-- ✅ **Configuration Management** (Ansible)
-- ✅ **Automated Testing** (PHPUnit)
+### Tech Stack
 
-**Perfect for:** Learning DevOps, Portfolio projects, Production forums, Team collaboration platforms
+| Category              | Technologies                               |
+| --------------------- | ------------------------------------------ |
+| **Infrastructure**    | Terraform, AWS (EC2, VPC, Security Groups) |
+| **CI/CD**             | GitHub Actions                             |
+| **Containers**        | Docker                                     |
+| **Config Management** | Ansible                                    |
+| **Application**       | PHP 8.1, Flarum, MySQL, Apache             |
+
+### Key Features
+
+- ✅ **100% Automated** - Zero manual deployment steps
+- ✅ **Fast Deployment** - 5-7 minutes from code to production
+- ✅ **Cost Efficient** - $0-10/month (Free Tier eligible)
+- ✅ **Production Ready** - Encrypted storage, security groups, monitoring
+- ✅ **Clean Code** - Modular, documented, maintainable
+
+---
+
+## 🚀 Quick Deploy
+
+### Prerequisites
+
+- AWS Account ([Free Tier](https://aws.amazon.com/free/))
+- GitHub Account
+
+### Deploy Steps
+
+**1. Fork this repository**
+
+**2. Add GitHub Secrets:**
+
+Go to `Settings` → `Secrets and variables` → `Actions`:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+**3. Deploy:**
+
+```bash
+git clone https://github.com/YOUR_USERNAME/aws-flarum-devops.git
+cd aws-flarum-devops
+git commit --allow-empty -m "Deploy"
+git push origin main
+```
+
+**4. Get URL:**
+
+- Open [AWS EC2 Console](https://console.aws.amazon.com/ec2)
+- Find instance: `riderhub-flarum`
+- Visit: `http://YOUR_EC2_IP`
+
+**Done! 🎉**
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────┐
-│    Internet Users                   │
-└─────────────┬───────────────────────┘
-              │ HTTP/HTTPS
-              ▼
-┌─────────────────────────────────────┐
-│  AWS EC2 Instance (All-in-One)      │
-│  ┌───────────────────────────────┐  │
-│  │ Apache Web Server             │  │
-│  │ PHP 8.1 + Flarum Forum        │  │
-│  │ MySQL Database (local)        │  │
-│  │ File Storage (local)          │  │
-│  └───────────────────────────────┘  │
-│  Cost: $8/month (Free Tier eligible)│
-└─────────────────────────────────────┘
+Internet → EC2 (Apache + PHP + Flarum + MySQL) → Users
 ```
 
-**Simple, cost-effective, and fully automated!**
-
----
-
-## 🚀 Quick Deploy (10 Minutes)
-
-### Prerequisites
-
-- AWS Account ([Sign up free](https://aws.amazon.com/free/))
-- GitHub Account
-
-### Steps
-
-**1. Fork this repository**
-
-**2. Add AWS credentials to GitHub Secrets:**
-
-- Go to: `Settings` → `Secrets and variables` → `Actions`
-- Add `AWS_ACCESS_KEY_ID`
-- Add `AWS_SECRET_ACCESS_KEY`
-
-**3. Push to main branch:**
-
-```bash
-git clone https://github.com/YOUR_USERNAME/aws-flarum-devops.git
-cd aws-flarum-devops
-git commit --allow-empty -m "Deploy to AWS"
-git push origin main
-```
-
-**4. Get your site URL:**
-
-- Go to [AWS EC2 Console](https://console.aws.amazon.com/ec2)
-- Find instance: `riderhub-flarum`
-- Copy **Public IP**
-- Visit: `http://YOUR_EC2_IP`
-
-**Done! Your forum is live! 🎉**
-
----
-
-## 📦 Technology Stack
-
-### DevOps & Infrastructure
-
-- **Cloud:** AWS EC2, VPC, Security Groups
-- **IaC:** Terraform (Infrastructure as Code)
-- **CI/CD:** GitHub Actions (automated deployment)
-- **Config:** Ansible (server configuration)
-- **Containers:** Docker (optional deployment)
-
-### Application
-
-- **Framework:** Flarum (modern PHP forum)
-- **Language:** PHP 8.1
-- **Web Server:** Apache HTTP Server
-- **Database:** MySQL 8.0 (MariaDB)
-- **Storage:** Local filesystem (30GB encrypted EBS)
+Simple all-in-one architecture optimized for cost and simplicity.
 
 ---
 
@@ -111,78 +86,48 @@ git push origin main
 ```
 aws-flarum-devops/
 ├── .github/workflows/     # CI/CD pipeline
-│   └── flarum.yml        # GitHub Actions workflow
 ├── terraform/             # Infrastructure as Code
 │   ├── main.tf           # AWS provider config
-│   ├── flarum-core.tf    # EC2 instance definition
-│   ├── variables.tf      # Configuration variables
-│   └── outputs.tf        # Deployment outputs
-├── src/flarum/           # PHP application code
-├── docker/               # Docker configuration
+│   ├── variables.tf      # Input variables
+│   ├── flarum-core.tf    # EC2, VPC, networking
+│   └── user-data-*.sh    # Server initialization
+├── src/flarum/           # PHP application
+├── frontend/             # React TypeScript app
+├── docker/               # Container config
 ├── ansible/              # Configuration management
-└── scripts/              # Utility scripts
+└── scripts/              # Automation scripts
 ```
-
----
-
-## ⚙️ What Gets Deployed?
-
-### AWS Resources
-
-- **EC2 Instance:** t3.micro (1 vCPU, 1GB RAM)
-- **EBS Volume:** 30GB encrypted storage
-- **VPC:** Isolated network with public subnet
-- **Security Group:** HTTP, HTTPS, SSH access
-- **SSH Key:** Automatic generation for access
-
-### Software Stack
-
-- **Apache 2.4** - Web server
-- **PHP 8.1** - Application runtime
-- **MySQL 8.0** - Database (local)
-- **Flarum** - Forum software
-- **Composer** - PHP dependency manager
 
 ---
 
 ## 🔄 CI/CD Pipeline
 
-**Automated workflow on every push to main:**
+Automated workflow on every push to `main`:
 
-```
-1. Run Tests          → PHPUnit tests
-2. Terraform Init     → Initialize providers
-3. Terraform Plan     → Preview changes
-4. Terraform Apply    → Deploy infrastructure
-5. Configure Server   → Install software
-6. Deploy Application → Install Flarum
-7. Output URL         → Site is live!
-```
+1. **Test** → Run PHPUnit tests
+2. **Provision** → Terraform applies infrastructure
+3. **Configure** → Install software stack
+4. **Deploy** → Install Flarum
+5. **Live** → Site accessible at EC2 IP
 
-**Total time:** 5-7 minutes from push to live site
+**Total time:** 5-7 minutes
 
 ---
 
 ## 💰 Cost
 
-### AWS Free Tier (First 12 months)
+| Tier                            | Monthly Cost |
+| ------------------------------- | ------------ |
+| **Free Tier** (first 12 months) | $0           |
+| **After Free Tier**             | ~$10         |
 
-- **$0/month** - Everything included in Free Tier
-
-### After Free Tier
-
-- **EC2 t3.micro:** $8/month
-- **EBS 30GB:** $2/month
-- **Data transfer:** ~$0.50/month
-- **Total:** ~$10/month
-
-**Savings vs RDS + S3 architecture:** $144/year!
+Breakdown: EC2 t3.micro ($8) + EBS 30GB ($2) + Data transfer ($0.50)
 
 ---
 
 ## 🛠️ Local Development
 
-### Deploy with Terraform
+### Terraform Deployment
 
 ```bash
 cd terraform
@@ -191,7 +136,7 @@ terraform plan
 terraform apply
 ```
 
-### Run with Docker
+### Docker Build
 
 ```bash
 cd docker/flarum
@@ -199,7 +144,7 @@ docker build -t flarum .
 docker run -p 8080:8080 flarum
 ```
 
-### Test Application
+### Run Tests
 
 ```bash
 cd src/flarum
@@ -209,139 +154,85 @@ vendor/bin/phpunit
 
 ---
 
-## 🔒 Security Features
+## 🔒 Security
 
 - ✅ Encrypted EBS volumes (AES-256)
 - ✅ Security group firewall rules
 - ✅ SSH key-based authentication
-- ✅ Secrets management via GitHub Secrets
-- ✅ HTTPS-ready (SSL certificate supported)
-- ✅ Automated security updates
+- ✅ GitHub Secrets for credentials
+- ✅ HTTPS-ready (Certbot supported)
 
 ---
 
-## 📊 DevOps Best Practices
+## 📊 Project Stats
 
-### Infrastructure as Code
-
-- All infrastructure defined in Terraform
-- Version controlled
-- Reproducible deployments
-- Easy rollbacks
-
-### CI/CD Automation
-
-- Automated testing on every commit
-- Infrastructure validation
-- Automated deployment
-- Deployment verification
-
-### Configuration Management
-
-- Idempotent Ansible playbooks
-- Automated server configuration
-- Consistent environments
+| Metric                   | Value                               |
+| ------------------------ | ----------------------------------- |
+| **Infrastructure Files** | 15+ Terraform/Ansible files         |
+| **Deployment Time**      | 5-7 minutes (automated)             |
+| **Lines of Code**        | 5,000+ (HCL, PHP, TypeScript, Bash) |
+| **AWS Resources**        | EC2, VPC, Security Groups, IAM, EBS |
+| **Cost**                 | $0-10/month                         |
+| **Automation**           | 100%                                |
 
 ---
 
-## 🎓 What You'll Learn
+## 🎓 Skills Demonstrated
 
-- ✅ Infrastructure as Code with Terraform
-- ✅ CI/CD pipeline design with GitHub Actions
-- ✅ AWS cloud architecture and services
-- ✅ Container orchestration basics
-- ✅ Configuration management with Ansible
-- ✅ Security best practices in the cloud
-- ✅ Cost optimization strategies
-- ✅ Production deployment workflows
+### DevOps
 
----
+- Infrastructure as Code (Terraform)
+- CI/CD Pipelines (GitHub Actions)
+- Configuration Management (Ansible)
+- Cloud Architecture (AWS)
 
-## 🔧 Customization
+### Engineering
 
-### Change Instance Size
-
-```hcl
-# terraform/variables.tf
-variable "instance_type" {
-  default = "t3.small"  # Upgrade from t3.micro
-}
-```
-
-### Modify Forum Settings
-
-```bash
-ssh -i terraform/riderhub-flarum-key.pem ec2-user@YOUR_EC2_IP
-cd /var/www/flarum
-sudo vim config.php
-```
-
-### Add Custom Domain
-
-1. Point domain A record to EC2 IP
-2. Update Apache virtual host
-3. Install SSL certificate with Certbot
+- Containerization (Docker)
+- Automated Testing (PHPUnit)
+- Shell Scripting (Bash)
+- Version Control (Git)
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Site shows 503 error
-
-**Cause:** Installation still in progress  
-**Solution:** Wait 5 more minutes, EC2 is installing software
-
-### GitHub Actions fails
-
-**Cause:** AWS credentials incorrect  
-**Solution:** Verify GitHub Secrets are set correctly
-
-### Can't access EC2 via SSH
-
-**Cause:** Security group blocking  
-**Solution:** Check security group allows port 22 from your IP
-
-### Site not loading at all
-
-**Cause:** EC2 instance not running  
-**Solution:** Check EC2 status in AWS Console
+| Issue                | Solution                                  |
+| -------------------- | ----------------------------------------- |
+| Site shows 503       | Wait 5 minutes - installation in progress |
+| GitHub Actions fails | Check AWS credentials in Secrets          |
+| Can't SSH to EC2     | Verify security group allows port 22      |
+| Site not loading     | Check EC2 instance is running in Console  |
 
 ---
 
-## 📈 Scaling Options
+## 📈 Scaling
 
-### Vertical Scaling
+**Vertical:** Change instance type in `terraform/variables.tf`
 
-Increase instance size in `terraform/variables.tf`:
+```hcl
+variable "instance_type" {
+  default = "t3.small"  # Upgrade from t3.micro
+}
+```
 
-- `t3.micro` → `t3.small` (2GB RAM)
-- `t3.small` → `t3.medium` (4GB RAM)
-
-### Horizontal Scaling
-
-Add load balancer and multiple instances:
-
-- Application Load Balancer
-- Auto Scaling Group
-- RDS for shared database
-- EFS for shared storage
+**Horizontal:** Add ALB, Auto Scaling, RDS, EFS for multi-instance setup
 
 ---
 
 ## 🤝 Contributing
 
-Contributions welcome! Please:
-
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+2. Create feature branch (`git checkout -b feature/NewFeature`)
+3. Commit changes (`git commit -m 'Add NewFeature'`)
+4. Push to branch (`git push origin feature/NewFeature`)
+5. Open Pull Request
 
 ---
 
 ## 📝 License
 
-MIT License - see [LICENSE](LICENSE) file for details
+MIT License - see [LICENSE](LICENSE)
 
 ---
 
@@ -350,31 +241,20 @@ MIT License - see [LICENSE](LICENSE) file for details
 - **Flarum** - Modern forum software
 - **Terraform** - Infrastructure as Code
 - **AWS** - Cloud infrastructure
-- **GitHub Actions** - CI/CD platform
+- **GitHub Actions** - CI/CD automation
 
 ---
 
-## 📞 Support
+## 💼 Why This Project?
 
-- 🐛 **Issues:** [GitHub Issues](https://github.com/scale600/aws-flarum-devops/issues)
-- 💬 **Discussions:** [GitHub Discussions](https://github.com/scale600/aws-flarum-devops/discussions)
-- 📖 **Documentation:** See repository files
+Demonstrates real-world DevOps skills:
 
----
+- ✅ Production-ready infrastructure, not tutorials
+- ✅ Multiple technologies (Terraform, Docker, AWS, Ansible)
+- ✅ Best practices (security, automation, cost optimization)
+- ✅ Complete documentation and clean code
 
-## ⭐ Show Your Support
-
-If this project helped you learn DevOps or deploy your forum, please give it a ⭐️!
-
----
-
-## 📊 Project Stats
-
-- **Infrastructure Files:** 15+
-- **Deployment Time:** 5-7 minutes
-- **Lines of Code:** 5,000+
-- **Cost:** $0-10/month
-- **Automation:** 100%
+Perfect for portfolios, job applications, and interviews.
 
 ---
 
