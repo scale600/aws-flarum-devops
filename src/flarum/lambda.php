@@ -36,9 +36,6 @@ function setupEnvironment(): void
     
     // File system configuration
     $_ENV['FILESYSTEM_DISK'] = $_ENV['FILESYSTEM_DISK'] ?? 's3';
-    // AWS_REGION and AWS_BUCKET are typically set by Lambda environment or Terraform
-    // $_ENV['AWS_REGION'] = $_ENV['AWS_REGION'] ?? 'us-east-1';
-    // $_ENV['AWS_BUCKET'] = $_ENV['AWS_BUCKET'] ?? 'your-s3-bucket-name';
 }
 
 /**
@@ -62,6 +59,9 @@ return function ($event, Context $context): HttpResponse {
         // Set up environment variables
         setupEnvironment();
         
+        // Log the event for debugging
+        error_log("Received event: " . json_encode($event));
+        
         // Handle null or invalid event data
         if (empty($event) || !is_array($event)) {
             error_log("Invalid event data received: " . json_encode($event));
@@ -78,11 +78,10 @@ return function ($event, Context $context): HttpResponse {
         // Get request information
         $path = $request->getPath();
         $method = $request->getMethod();
+        
+        error_log("Processing request: $method $path");
 
         // Simulate Flarum application logic
-        // In a real scenario, you would bootstrap Flarum and dispatch the request
-        // For now, we'll return a simple response based on the path
-
         if ($path === '/') {
             return createResponse(200, [
                 'message' => 'Welcome to RiderHub Flarum Forum!',
@@ -99,7 +98,9 @@ return function ($event, Context $context): HttpResponse {
                     'GET /' => 'Forum home page',
                     'GET /api' => 'API documentation',
                     'GET /status' => 'System status'
-                ]
+                ],
+                'timestamp' => date('c'),
+                'php_version' => PHP_VERSION
             ]);
         } elseif ($path === '/status') {
             return createResponse(200, [
