@@ -1,25 +1,7 @@
 # =============================================================================
 # Flarum OSS Dockerfile for AWS Lambda
 # =============================================================================
-FROM public.ecr.aws/lambda/provided:al2
-
-# Install PHP 8.1 and dependencies
-RUN yum update -y && \
-    yum install -y \
-    amazon-linux-extras && \
-    amazon-linux-extras install -y php8.1 && \
-    yum install -y \
-    php-cli \
-    php-common \
-    php-json \
-    php-mbstring \
-    php-xml \
-    php-zip \
-    php-mysqlnd \
-    php-opcache \
-    git \
-    unzip \
-    && yum clean all
+FROM public.ecr.aws/lambda/php:8.1
 
 # Set working directory
 WORKDIR /var/task
@@ -73,5 +55,5 @@ RUN echo "APP_NAME=Flarum" > .env && \
     echo "QUEUE_CONNECTION=sync" >> .env
 
 # Set the handler
-CMD ["lambda.php"]
+CMD ["lambda.handler"]
 
