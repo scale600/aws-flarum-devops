@@ -7,7 +7,7 @@
 # =============================================================================
 resource "aws_db_subnet_group" "flarum" {
   name       = "${var.project_name}-flarum-db-subnet-group"
-  subnet_ids = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+  subnet_ids = [data.aws_subnet.private_1.id, data.aws_subnet.private_2.id]
 
   tags = {
     Name        = "${var.project_name}-flarum-db-subnet-group"
@@ -52,20 +52,19 @@ resource "aws_db_instance" "flarum" {
 # =============================================================================
 # VPC and Networking
 # =============================================================================
-resource "aws_vpc" "flarum" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-  tags = {
-    Name        = "${var.project_name}-flarum-vpc"
-    Service     = "VPC"
-    Environment = var.environment
+# Use existing VPC instead of creating a new one (VPC limit reached)
+data "aws_vpc" "flarum" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.project_name}-flarum-vpc"]
   }
+  
+  # Use the most recent VPC if multiple exist
+  most_recent = true
 }
 
 resource "aws_internet_gateway" "flarum" {
-  vpc_id = aws_vpc.flarum.id
+  vpc_id = data.data.aws_vpc.flarum.id
 
   tags = {
     Name        = "${var.project_name}-flarum-igw"
@@ -74,58 +73,40 @@ resource "aws_internet_gateway" "flarum" {
   }
 }
 
-resource "aws_subnet" "public_1" {
-  vpc_id                  = aws_vpc.flarum.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "${var.aws_region}a"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name        = "${var.project_name}-flarum-public-1"
-    Service     = "Subnet"
-    Environment = var.environment
+data "aws_subnet" "public_1" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.project_name}-flarum-public-1"]
   }
+  vpc_id = data.aws_vpc.flarum.id
 }
 
-resource "aws_subnet" "public_2" {
-  vpc_id                  = aws_vpc.flarum.id
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = "${var.aws_region}b"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name        = "${var.project_name}-flarum-public-2"
-    Service     = "Subnet"
-    Environment = var.environment
+data "aws_subnet" "public_2" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.project_name}-flarum-public-2"]
   }
+  vpc_id = data.aws_vpc.flarum.id
 }
 
-resource "aws_subnet" "private_1" {
-  vpc_id            = aws_vpc.flarum.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "${var.aws_region}a"
-
-  tags = {
-    Name        = "${var.project_name}-flarum-private-1"
-    Service     = "Subnet"
-    Environment = var.environment
+data "aws_subnet" "private_1" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.project_name}-flarum-private-1"]
   }
+  vpc_id = data.aws_vpc.flarum.id
 }
 
-resource "aws_subnet" "private_2" {
-  vpc_id            = aws_vpc.flarum.id
-  cidr_block        = "10.0.4.0/24"
-  availability_zone = "${var.aws_region}b"
-
-  tags = {
-    Name        = "${var.project_name}-flarum-private-2"
-    Service     = "Subnet"
-    Environment = var.environment
+data "aws_subnet" "private_2" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.project_name}-flarum-private-2"]
   }
+  vpc_id = data.aws_vpc.flarum.id
 }
 
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.flarum.id
+  vpc_id = data.aws_vpc.flarum.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -140,12 +121,12 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public_1" {
-  subnet_id      = aws_subnet.public_1.id
+  subnet_id      = data.aws_subnet.public_1.id
   route_table_id = aws_route_table.public.id
 }
 
 resource "aws_route_table_association" "public_2" {
-  subnet_id      = aws_subnet.public_2.id
+  subnet_id      = data.aws_subnet.public_2.id
   route_table_id = aws_route_table.public.id
 }
 
@@ -154,7 +135,7 @@ resource "aws_route_table_association" "public_2" {
 # =============================================================================
 resource "aws_security_group" "lambda" {
   name_prefix = "${var.project_name}-flarum-lambda-"
-  vpc_id      = aws_vpc.flarum.id
+  vpc_id      = data.aws_vpc.flarum.id
 
   egress {
     from_port   = 0
@@ -172,7 +153,7 @@ resource "aws_security_group" "lambda" {
 
 resource "aws_security_group" "rds" {
   name_prefix = "${var.project_name}-flarum-rds-"
-  vpc_id      = aws_vpc.flarum.id
+  vpc_id      = data.aws_vpc.flarum.id
 
   ingress {
     from_port       = 3306
@@ -336,7 +317,7 @@ resource "aws_lambda_function" "flarum" {
   memory_size = 512
 
   vpc_config {
-    subnet_ids         = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+    subnet_ids         = [data.aws_subnet.private_1.id, data.aws_subnet.private_2.id]
     security_group_ids = [aws_security_group.lambda.id]
   }
 
