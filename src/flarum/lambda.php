@@ -14,7 +14,6 @@ require __DIR__ . '/vendor/autoload.php';
 
 use Bref\Context\Context;
 use Bref\Event\Http\HttpRequestEvent;
-use Bref\Event\Http\HttpResponse;
 
 /**
  * Set up environment variables for Flarum
@@ -41,20 +40,24 @@ function setupEnvironment(): void
 /**
  * Create HTTP response
  */
-function createResponse(int $statusCode, array $data): HttpResponse
+function createResponse(int $statusCode, array $data): array
 {
-    return new HttpResponse(json_encode($data, JSON_PRETTY_PRINT), [
-        'Content-Type' => 'application/json',
-        'Access-Control-Allow-Origin' => '*',
-        'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers' => 'Content-Type, Authorization'
-    ], $statusCode);
+    return [
+        'statusCode' => $statusCode,
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'Access-Control-Allow-Origin' => '*',
+            'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers' => 'Content-Type, Authorization'
+        ],
+        'body' => json_encode($data, JSON_PRETTY_PRINT)
+    ];
 }
 
 /**
  * Main handler function for processing API Gateway requests
  */
-return function ($event, Context $context): HttpResponse {
+return function ($event, Context $context): array {
     try {
         // Set up environment variables
         setupEnvironment();
