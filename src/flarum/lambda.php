@@ -19,7 +19,7 @@ use Bref\Event\Http\HttpResponse;
 /**
  * Main handler function for processing API Gateway requests
  */
-return function ($event, Context $context): HttpResponse
+function handler($event, Context $context): HttpResponse
 {
     try {
         // Set up environment variables
