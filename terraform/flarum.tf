@@ -58,13 +58,10 @@ data "aws_vpc" "flarum" {
   id = "vpc-0a9c03edd4a0eda4f"
 }
 
-resource "aws_internet_gateway" "flarum" {
-  vpc_id = data.aws_vpc.flarum.id
-
-  tags = {
-    Name        = "${var.project_name}-flarum-igw"
-    Service     = "IGW"
-    Environment = var.environment
+data "aws_internet_gateway" "flarum" {
+  filter {
+    name   = "attachment.vpc-id"
+    values = [data.aws_vpc.flarum.id]
   }
 }
 
@@ -105,7 +102,7 @@ resource "aws_route_table" "public" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.flarum.id
+    gateway_id = data.aws_internet_gateway.flarum.id
   }
 
   tags = {
