@@ -8,19 +8,13 @@
 # =============================================================================
 
 output "flarum_url" {
-  description = "Public URL to access the Flarum forum"
+  description = "Public URL to access the Flarum forum (using EC2 public IP)"
   value       = local.forum_url
 }
 
-output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
-  value       = aws_lb.flarum.dns_name
-}
-
-output "alb_zone_id" {
-  description = "Zone ID of the Application Load Balancer (for Route53)"
-  value       = aws_lb.flarum.zone_id
-}
+# ALB outputs removed - using EC2 public IP directly
+# output "alb_dns_name" { ... }
+# output "alb_zone_id" { ... }
 
 # =============================================================================
 # EC2 Instance Information

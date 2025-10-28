@@ -197,8 +197,9 @@ locals {
   ssh_key_path = "${path.module}/${local.name_tags.key_pair}.pem"
 
   # Output URLs
-  http_url  = "http://${try(aws_lb.flarum.dns_name, "")}"
-  https_url = "https://${try(aws_lb.flarum.dns_name, "")}"
+  # Using EC2 public IP directly instead of ALB
+  http_url  = "http://${aws_instance.flarum.public_ip}"
+  https_url = "https://${aws_instance.flarum.public_ip}"
   forum_url = local.configure_https ? local.https_url : local.http_url
 }
 

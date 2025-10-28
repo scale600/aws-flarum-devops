@@ -203,65 +203,16 @@ resource "aws_security_group" "flarum_web" {
 }
 
 # =============================================================================
-# Application Load Balancer
+# Application Load Balancer - DISABLED (Using EC2 Public IP directly)
 # =============================================================================
-resource "aws_lb" "flarum" {
-  name               = "${var.project_name}-flarum-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.flarum_web.id]
-  subnets            = [aws_subnet.public_1.id, aws_subnet.public_2.id]
+# ALB removed for simplicity - EC2 public IP is used directly
+# Security group already allows HTTP/HTTPS traffic to EC2
 
-  enable_deletion_protection = false
-
-  tags = {
-    Name        = "${var.project_name}-flarum-alb"
-    Service     = "ALB"
-    Environment = var.environment
-  }
-}
-
-resource "aws_lb_target_group" "flarum" {
-  name     = "${var.project_name}-flarum-tg"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = data.aws_vpc.flarum.id
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    interval            = 30
-    matcher             = "200"
-    path                = "/"
-    port                = "traffic-port"
-    protocol            = "HTTP"
-    timeout             = 5
-    unhealthy_threshold = 2
-  }
-
-  tags = {
-    Name        = "${var.project_name}-flarum-tg"
-    Service     = "ALB"
-    Environment = var.environment
-  }
-}
-
-resource "aws_lb_target_group_attachment" "flarum" {
-  target_group_arn = aws_lb_target_group.flarum.arn
-  target_id        = aws_instance.flarum.id
-  port             = 80
-}
-
-resource "aws_lb_listener" "flarum" {
-  load_balancer_arn = aws_lb.flarum.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.flarum.arn
-  }
-}
+# Commented out ALB resources:
+# - aws_lb.flarum (Application Load Balancer)
+# - aws_lb_target_group.flarum (Target Group)
+# - aws_lb_target_group_attachment.flarum (EC2 attachment)
+# - aws_lb_listener.flarum (HTTP listener)
 
 # =============================================================================
 # IAM Role for EC2 Instance
