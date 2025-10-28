@@ -1,7 +1,7 @@
 # =============================================================================
 # Flarum OSS Dockerfile for AWS Lambda
 # =============================================================================
-FROM public.ecr.aws/lambda/php:8.1
+FROM bref/php-81-fpm:2
 
 # Set working directory
 WORKDIR /var/task
@@ -55,5 +55,5 @@ RUN echo "APP_NAME=Flarum" > .env && \
     echo "QUEUE_CONNECTION=sync" >> .env
 
 # Set the handler
-CMD ["lambda.handler"]
+CMD ["lambda.php"]
 
