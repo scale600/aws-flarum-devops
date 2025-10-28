@@ -351,7 +351,6 @@ resource "aws_lambda_function" "flarum" {
       DB_USERNAME       = "flarum"
       DB_PASSWORD       = random_password.db_password.result
       FILESYSTEM_DISK   = "s3"
-      AWS_DEFAULT_REGION = var.aws_region
       AWS_BUCKET        = aws_s3_bucket.flarum_files.bucket
       SESSION_DRIVER    = "array"
       CACHE_DRIVER      = "array"

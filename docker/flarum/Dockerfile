@@ -1,18 +1,28 @@
 # =============================================================================
 # Flarum OSS Dockerfile for AWS Lambda
 # =============================================================================
-FROM bref/php-81-fpm:2
+FROM public.ecr.aws/lambda/provided:al2
+
+# Install PHP 8.1 and dependencies
+RUN yum update -y && \
+    yum install -y \
+    amazon-linux-extras && \
+    amazon-linux-extras install -y php8.1 && \
+    yum install -y \
+    php-cli \
+    php-common \
+    php-json \
+    php-mbstring \
+    php-xml \
+    php-zip \
+    php-mysqlnd \
+    php-opcache \
+    git \
+    unzip \
+    && yum clean all
 
 # Set working directory
 WORKDIR /var/task
-
-# Install system dependencies
-RUN yum update -y && \
-    yum install -y \
-    git \
-    unzip \
-    mysql-client \
-    && yum clean all
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -61,9 +71,6 @@ RUN echo "APP_NAME=Flarum" > .env && \
     echo "SESSION_DRIVER=array" >> .env && \
     echo "CACHE_DRIVER=array" >> .env && \
     echo "QUEUE_CONNECTION=sync" >> .env
-
-# Expose port 8080
-EXPOSE 8080
 
 # Set the handler
 CMD ["lambda.php"]
