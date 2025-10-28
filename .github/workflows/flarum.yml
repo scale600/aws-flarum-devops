@@ -129,7 +129,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     outputs:
-      image-uri: ${{ steps.build-image.outputs.image }}
+      image-uri: ${{ steps.push-image.outputs.image-uri }}
 
     steps:
       - name: Checkout code
@@ -166,6 +166,7 @@ jobs:
           echo "Docker image built successfully"
 
       - name: Push image to ECR
+        id: push-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ env.ECR_REPOSITORY_NAME }}
