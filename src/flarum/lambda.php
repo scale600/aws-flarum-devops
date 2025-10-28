@@ -19,7 +19,7 @@ use Bref\Event\Http\HttpResponse;
 /**
  * Main handler function for processing API Gateway requests
  */
-function handler($event, Context $context): HttpResponse
+$handler = function ($event, Context $context): HttpResponse
 {
     try {
         // Set up environment variables
@@ -116,3 +116,6 @@ function createResponse(int $statusCode, array $data): HttpResponse
         'Access-Control-Allow-Headers' => 'Content-Type, Authorization'
     ], $statusCode);
 }
+
+// Return the handler function
+return $handler;
