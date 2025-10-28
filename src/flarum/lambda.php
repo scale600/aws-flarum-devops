@@ -17,10 +17,47 @@ use Bref\Event\Http\HttpRequestEvent;
 use Bref\Event\Http\HttpResponse;
 
 /**
+ * Set up environment variables for Flarum
+ */
+function setupEnvironment(): void
+{
+    // Set required environment variables
+    $_ENV['APP_ENV'] = $_ENV['APP_ENV'] ?? 'production';
+    $_ENV['APP_DEBUG'] = $_ENV['APP_DEBUG'] ?? 'false';
+    $_ENV['APP_URL'] = $_ENV['APP_URL'] ?? 'https://localhost';
+    
+    // Database configuration
+    $_ENV['DB_CONNECTION'] = $_ENV['DB_CONNECTION'] ?? 'mysql';
+    $_ENV['DB_HOST'] = $_ENV['DB_HOST'] ?? 'localhost';
+    $_ENV['DB_PORT'] = $_ENV['DB_PORT'] ?? '3306';
+    $_ENV['DB_DATABASE'] = $_ENV['DB_DATABASE'] ?? 'flarum';
+    $_ENV['DB_USERNAME'] = $_ENV['DB_USERNAME'] ?? 'flarum';
+    $_ENV['DB_PASSWORD'] = $_ENV['DB_PASSWORD'] ?? '';
+    
+    // File system configuration
+    $_ENV['FILESYSTEM_DISK'] = $_ENV['FILESYSTEM_DISK'] ?? 's3';
+    // AWS_REGION and AWS_BUCKET are typically set by Lambda environment or Terraform
+    // $_ENV['AWS_REGION'] = $_ENV['AWS_REGION'] ?? 'us-east-1';
+    // $_ENV['AWS_BUCKET'] = $_ENV['AWS_BUCKET'] ?? 'your-s3-bucket-name';
+}
+
+/**
+ * Create HTTP response
+ */
+function createResponse(int $statusCode, array $data): HttpResponse
+{
+    return new HttpResponse(json_encode($data, JSON_PRETTY_PRINT), [
+        'Content-Type' => 'application/json',
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers' => 'Content-Type, Authorization'
+    ], $statusCode);
+}
+
+/**
  * Main handler function for processing API Gateway requests
  */
-$handler = function ($event, Context $context): HttpResponse
-{
+return function ($event, Context $context): HttpResponse {
     try {
         // Set up environment variables
         setupEnvironment();
@@ -77,45 +114,4 @@ $handler = function ($event, Context $context): HttpResponse
             'message' => $e->getMessage()
         ]);
     }
-}
-
-/**
- * Set up environment variables for Flarum
- */
-function setupEnvironment(): void
-{
-    // Set required environment variables
-    $_ENV['APP_ENV'] = $_ENV['APP_ENV'] ?? 'production';
-    $_ENV['APP_DEBUG'] = $_ENV['APP_DEBUG'] ?? 'false';
-    $_ENV['APP_URL'] = $_ENV['APP_URL'] ?? 'https://localhost';
-    
-    // Database configuration
-    $_ENV['DB_CONNECTION'] = $_ENV['DB_CONNECTION'] ?? 'mysql';
-    $_ENV['DB_HOST'] = $_ENV['DB_HOST'] ?? 'localhost';
-    $_ENV['DB_PORT'] = $_ENV['DB_PORT'] ?? '3306';
-    $_ENV['DB_DATABASE'] = $_ENV['DB_DATABASE'] ?? 'flarum';
-    $_ENV['DB_USERNAME'] = $_ENV['DB_USERNAME'] ?? 'flarum';
-    $_ENV['DB_PASSWORD'] = $_ENV['DB_PASSWORD'] ?? '';
-    
-    // File system configuration
-    $_ENV['FILESYSTEM_DISK'] = $_ENV['FILESYSTEM_DISK'] ?? 's3';
-    // AWS_REGION and AWS_BUCKET are typically set by Lambda environment or Terraform
-    // $_ENV['AWS_REGION'] = $_ENV['AWS_REGION'] ?? 'us-east-1';
-    // $_ENV['AWS_BUCKET'] = $_ENV['AWS_BUCKET'] ?? 'your-s3-bucket-name';
-}
-
-/**
- * Create HTTP response
- */
-function createResponse(int $statusCode, array $data): HttpResponse
-{
-    return new HttpResponse(json_encode($data, JSON_PRETTY_PRINT), [
-        'Content-Type' => 'application/json',
-        'Access-Control-Allow-Origin' => '*',
-        'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers' => 'Content-Type, Authorization'
-    ], $statusCode);
-}
-
-// Return the handler function
-return $handler;
+};
