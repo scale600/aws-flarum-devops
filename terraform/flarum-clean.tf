@@ -91,17 +91,11 @@ resource "aws_s3_bucket_public_access_block" "flarum_files" {
 # =============================================================================
 # VPC and Networking (Keep - Essential for Flarum)
 # =============================================================================
-# Use existing VPC instead of creating a new one (VPC limit reached)
-data "aws_vpc" "flarum" {
-  # Use a specific VPC ID to avoid multiple matches
-  id = "vpc-0a9c03edd4a0eda4f"
-}
-
-# Data sources removed - using direct subnet IDs in flarum-core.tf
+# VPC data source moved to data.tf to avoid duplication
 
 # Route table moved to flarum-core.tf
 
-# Route table associations will be handled in flarum-core.tf
+# Route table associations handled in flarum-core.tf
 
 # =============================================================================
 # Security Groups (Keep - Essential for Flarum)
@@ -148,20 +142,4 @@ resource "random_string" "bucket_suffix" {
 # =============================================================================
 # Outputs
 # =============================================================================
-output "rds_endpoint" {
-  description = "RDS MySQL endpoint"
-  value       = aws_db_instance.flarum.endpoint
-  sensitive   = true
-}
-
-output "s3_bucket_name" {
-  description = "S3 bucket name for file storage"
-  value       = aws_s3_bucket.flarum_files.bucket
-}
-
-output "vpc_id" {
-  description = "VPC ID"
-  value       = data.aws_vpc.flarum.id
-}
-
-# Public subnet outputs moved to flarum-core.tf
+# All outputs moved to outputs.tf to avoid duplication

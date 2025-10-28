@@ -127,12 +127,12 @@ jobs:
           echo "s3_bucket_name=$(terraform output -raw s3_bucket_name 2>/dev/null || echo 'Not available')" >> $GITHUB_OUTPUT
 
   # =============================================================================
-  # Application Build Phase
+  # Application Build Phase (DISABLED - Using EC2 deployment instead of Lambda)
   # =============================================================================
   build-application:
     needs: [test, deploy-infrastructure]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: false  # Disabled - EC2 deployment doesn't need Docker/Lambda
     outputs:
       image-uri: ${{ steps.push-image.outputs.image-uri }}
 
@@ -183,12 +183,12 @@ jobs:
           echo "image-uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
   # =============================================================================
-  # Lambda Deployment Phase
+  # Lambda Deployment Phase (DISABLED - Using EC2 deployment instead)
   # =============================================================================
   deploy-lambda:
     needs: [build-application]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: false  # Disabled - EC2 deployment doesn't use Lambda
 
     steps:
       - name: Checkout code
@@ -219,12 +219,12 @@ jobs:
           echo "Lambda function updated successfully"
 
   # =============================================================================
-  # Database Setup Phase
+  # Database Setup Phase (DISABLED - EC2 user-data handles Flarum setup)
   # =============================================================================
   setup-database:
     needs: [deploy-infrastructure, deploy-lambda]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: false  # Disabled - EC2 user-data script handles Flarum installation
 
     steps:
       - name: Checkout code
@@ -257,7 +257,7 @@ jobs:
   # Finalization Phase
   # =============================================================================
   finalize-deployment:
-    needs: [deploy-lambda, setup-database]
+    needs: [deploy-infrastructure]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 

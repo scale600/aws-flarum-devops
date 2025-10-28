@@ -335,17 +335,4 @@ resource "aws_iam_role_policy" "flarum_s3" {
 # =============================================================================
 # Outputs
 # =============================================================================
-output "flarum_url" {
-  description = "URL of the Flarum forum"
-  value       = "http://${aws_lb.flarum.dns_name}"
-}
-
-output "flarum_instance_id" {
-  description = "ID of the Flarum EC2 instance"
-  value       = aws_instance.flarum.id
-}
-
-output "flarum_public_ip" {
-  description = "Public IP of the Flarum instance"
-  value       = aws_instance.flarum.public_ip
-}
+# All outputs moved to outputs.tf to avoid duplication
