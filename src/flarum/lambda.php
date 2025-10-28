@@ -62,6 +62,16 @@ return function ($event, Context $context): HttpResponse {
         // Set up environment variables
         setupEnvironment();
         
+        // Handle null or invalid event data
+        if (empty($event) || !is_array($event)) {
+            error_log("Invalid event data received: " . json_encode($event));
+            return createResponse(400, [
+                'error' => 'Invalid request',
+                'message' => 'Event data is missing or invalid',
+                'event' => $event
+            ]);
+        }
+        
         // Create HTTP request event
         $request = new HttpRequestEvent($event);
         
