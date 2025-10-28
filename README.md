@@ -1,23 +1,22 @@
-# aws-flarum-devops-serverless
+# aws-flarum-devops
 
-Uses Terraform for infrastructure as code to provision Lambda (PHP/Bref), RDS MySQL (database), S3 (media), API Gateway (REST APIs), and ECR (container registry); Ansible for Flarum PHP configuration; Docker for containerized Lambda deployments; and GitHub Actions for CI/CD pipelines.
+AWS - Flarum forum with full DevOps automation - EC2, RDS MySQL, ALB, S3, Terraform, Docker, GitHub Actions. Community platform with complete CI/CD pipeline.
 
 ## Project Overview
 
-aws-flarum-devops is a hands-on DevOps project that deploys RiderHub, a serverless, Flarum-based community forum tailored for motorcycle enthusiasts, on the AWS Free Tier. Designed to engage RiderWin.com's audience—motorcycle riders, gear reviewers, and tour planners—RiderHub enables discussions on gear, tour routes, safety tips, and community events. The project leverages Terraform for infrastructure as code (IaC), Ansible for configuration management, Docker for containerized deployments, and GitHub Actions for CI/CD pipelines, ensuring a zero-cost ($0), fully automated, serverless architecture integrated with RiderWin.com's Blogspot platform.
+aws-flarum-devops is a hands-on DevOps project that deploys RiderHub, a Flarum-based community forum tailored for motorcycle enthusiasts, on the AWS Free Tier. Designed to engage RiderWin.com's audience—motorcycle riders, gear reviewers, and tour planners—RiderHub enables discussions on gear, tour routes, safety tips, and community events. The project leverages Terraform for infrastructure as code (IaC), Ansible for configuration management, Docker for containerized deployments, and GitHub Actions for CI/CD pipelines, ensuring a zero-cost ($0), fully automated, EC2-based architecture integrated with RiderWin.com's Blogspot platform.
 
 ## Key Features
 
 **Motorcycle Community Forum**: RiderHub, built on Flarum, allows users to create, read, update, and delete posts/comments, upload media (e.g., bike photos), and receive notifications for new content, fostering engagement for RiderWin.com's audience.
 
-**Serverless Architecture**: Utilizes AWS Free Tier services:
+**AWS Architecture**: Utilizes AWS Free Tier services:
 
-- **Lambda**: Runs Flarum backend (PHP 8.1 with Bref) for CRUD operations (~10K daily requests within 1M/month limit).
+- **EC2**: Runs Flarum backend (PHP 8.1) for web application hosting (t3.micro instance within Free Tier limits).
 - **RDS MySQL**: Stores forum data (discussions, posts, users, settings) with 20GB storage within Free Tier limits.
 - **S3**: Hosts media uploads and file storage (~2GB within 5GB limit).
-- **API Gateway**: Exposes REST APIs (/api/discussions, /api/posts, /api/users, ~10K daily calls within 1M/month limit).
-- **ECR**: Container registry for Flarum Docker images (500MB within 500MB limit).
-- **VPC**: Secure networking with public/private subnets for Lambda and RDS.
+- **Application Load Balancer**: Distributes traffic and provides high availability for the forum.
+- **VPC**: Secure networking with public/private subnets for EC2 and RDS.
 
 **DevOps Automation**:
 

@@ -63,11 +63,6 @@ variable "image_tag" {
 # =============================================================================
 # Random Resources
 # =============================================================================
-resource "random_password" "db_password" {
-  length  = 16
-  special = true
-}
-
 resource "random_string" "s3_suffix" {
   length  = 8
   special = false
