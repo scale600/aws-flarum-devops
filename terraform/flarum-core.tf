@@ -113,6 +113,9 @@ resource "aws_instance" "flarum" {
 
   # Using minimal user-data for FAST deployment (2-3 minutes instead of 15-20 minutes)
   user_data = base64encode(file("${path.module}/user-data-minimal.sh"))
+  
+  # Force replacement of EC2 instance to apply new user-data
+  user_data_replace_on_change = true
 
   root_block_device {
     volume_type = "gp3"
