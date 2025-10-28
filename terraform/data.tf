@@ -75,20 +75,21 @@ data "aws_iam_policy_document" "ec2_assume_role" {
 }
 
 # =============================================================================
-# IAM Policy Document for S3 Access
+# IAM Policy Document for S3 Access - DISABLED (EC2-only deployment)
 # =============================================================================
+# S3 not used in standalone EC2 deployment - files stored locally
 
-data "aws_iam_policy_document" "s3_access" {
-  statement {
-    sid    = "S3BucketAccess"
-    effect = "Allow"
-
-    actions = local.s3_policy_actions
-
-    resources = [
-      aws_s3_bucket.flarum_files.arn,
-      "${aws_s3_bucket.flarum_files.arn}/*"
-    ]
-  }
-}
+# data "aws_iam_policy_document" "s3_access" {
+#   statement {
+#     sid    = "S3BucketAccess"
+#     effect = "Allow"
+#
+#     actions = local.s3_policy_actions
+#
+#     resources = [
+#       aws_s3_bucket.flarum_files.arn,
+#       "${aws_s3_bucket.flarum_files.arn}/*"
+#     ]
+#   }
+# }
 

@@ -168,16 +168,17 @@ locals {
   ssm_managed_policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 
   # =============================================================================
-  # User Data Template Variables
+  # User Data Template Variables - EC2-Only Deployment
   # =============================================================================
+  # RDS and S3 not used - MySQL and files are local on EC2
 
   user_data_vars = {
-    db_host     = try(aws_db_instance.flarum.endpoint, "")
-    db_port     = local.rds_config.port
-    db_name     = local.rds_config.db_name
-    db_username = local.rds_config.username
-    db_password = try(random_password.db_password.result, "")
-    s3_bucket   = try(aws_s3_bucket.flarum_files.bucket, "")
+    # Database is local MySQL on EC2 (configured in user-data script)
+    db_host     = "localhost"
+    db_port     = "3306"
+    db_name     = "flarum"
+    db_username = "flarum"
+    # S3 not used - files stored locally on EC2
     aws_region  = var.aws_region
     environment = var.environment
     project     = var.project_name
