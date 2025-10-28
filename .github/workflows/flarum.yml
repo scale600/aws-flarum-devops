@@ -132,7 +132,7 @@ jobs:
   build-application:
     needs: [test, deploy-infrastructure]
     runs-on: ubuntu-latest
-    if: false  # Disabled - EC2 deployment doesn't need Docker/Lambda
+    if: false # Disabled - EC2 deployment doesn't need Docker/Lambda
     outputs:
       image-uri: ${{ steps.push-image.outputs.image-uri }}
 
@@ -188,7 +188,7 @@ jobs:
   deploy-lambda:
     needs: [build-application]
     runs-on: ubuntu-latest
-    if: false  # Disabled - EC2 deployment doesn't use Lambda
+    if: false # Disabled - EC2 deployment doesn't use Lambda
 
     steps:
       - name: Checkout code
@@ -206,12 +206,12 @@ jobs:
           echo "Updating Lambda function code..."
           IMAGE_URI="${{ needs.build-application.outputs.image-uri }}"
           echo "Image URI: $IMAGE_URI"
-          
+
           if [ -z "$IMAGE_URI" ]; then
             echo "Error: IMAGE_URI is empty. Cannot update Lambda function."
             exit 1
           fi
-          
+
           aws lambda update-function-code \
             --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
             --image-uri $IMAGE_URI \
@@ -224,7 +224,7 @@ jobs:
   setup-database:
     needs: [deploy-infrastructure, deploy-lambda]
     runs-on: ubuntu-latest
-    if: false  # Disabled - EC2 user-data script handles Flarum installation
+    if: false # Disabled - EC2 user-data script handles Flarum installation
 
     steps:
       - name: Checkout code
@@ -284,11 +284,10 @@ jobs:
         run: |
           echo "Testing Flarum endpoint..."
           FLARUM_URL="${{ needs.deploy-infrastructure.outputs.flarum_url }}"
-          
+
           if [ "$FLARUM_URL" != "Not available" ]; then
             echo "Testing home endpoint..."
             curl -s -o /dev/null -w "%{http_code}" "$FLARUM_URL/" || echo "Endpoint test completed"
           else
             echo "Flarum URL not available yet, skipping endpoint test"
           fi
-

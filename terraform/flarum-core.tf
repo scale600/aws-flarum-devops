@@ -257,29 +257,8 @@ resource "aws_iam_role_policy_attachment" "flarum_ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-resource "aws_iam_role_policy" "flarum_s3" {
-  name = "${var.project_name}-flarum-s3-policy"
-  role = aws_iam_role.flarum_instance.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          aws_s3_bucket.flarum_files.arn,
-          "${aws_s3_bucket.flarum_files.arn}/*"
-        ]
-      }
-    ]
-  })
-}
+# S3 IAM Policy removed - using local filesystem storage
+# resource "aws_iam_role_policy" "flarum_s3" { ... }
 
 # =============================================================================
 # Outputs
